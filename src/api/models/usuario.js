@@ -13,8 +13,8 @@ usuarioSchema.methods.generateHash = function(password){
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 };
 
-usuarioSchema.methods.comparePassword = function(password, old_password){
-    return bcrypt.compareSync(password, old_password, null);
+usuarioSchema.methods.comparePassword = function(password, passwordStored){
+    return bcrypt.compareSync(password, passwordStored, null);
 }
 
 module.exports = mongoose.model('Usuario', usuarioSchema);

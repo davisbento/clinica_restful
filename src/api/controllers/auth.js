@@ -18,7 +18,9 @@ router.post('/signup', function(req, res){
             usuario.password = usuario.generateHash(req.body.password);
             usuario.token = usuario.generateHash(Date.now());
 
-            var link = req.protocol + '://' + req.hostname + ':3000' + '/api/auth/confirm_account?token=' + usuario.token;
+            var link = req.protocol + '://' + 
+                       req.hostname + ':3000' + '/api/auth/confirm_account?token=' +
+                       usuario.token;
 
             emailService.signupEmail(usuario, link, function(result){
                 if(!result){
