@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const usuarioModel = require('../models/usuario');
 const emailService = require('../services/emailService');
+const jwt = require('jsonwebtoken');
 
 router.post('/signup', function(req, res){
     usuarioModel.findOne({"email": req.body.email}, function(err, result){
@@ -47,21 +48,31 @@ router.post('/authenticate', function(req, res){
 
     var usuario = new usuarioModel();
 
-    usuarioModel.findOne({"email": email}, function(err, result){
+    usuarioModel.findOne({"email": email}, function(err, user){
         if(err){
             res.status(500).json({err});
         }
-        else if(!result){
+        else if(!user){
             res.status(500).json({message: "Email não encontrado no sistema!"});
         }
-        else if(!usuario.comparePassword(pass, result.password)){
+        else if(!usuario.comparePassword(pass, user.password)){
             res.status(500).json({message: "A senha não confere!"});
         }
-        else if(!result.email_confirm){
+        else if(!user.email_confirm){
             res.status(500).json({message: "Email não confirmado, confirme seu email antes de logar!"});
         }
         else{
-            res.status(200).json({message: "Usuário autenticado, redirecionando..."});
+            const payload = {
+                sub: user._id
+            };
+
+            // create a token string
+            const token = jwt.sign(payload, process.env.SECRET_KEY);
+
+            res.status(200).json({
+                 token,
+                 message: "Usuário autenticado, redirecionando..."
+            });
         }
     });
 });

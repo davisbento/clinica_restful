@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const usuarioModel = require('../models/usuario');
+const checkAuth = require('../middleware/authMiddleware');
 
-router.get('/', function(req, res){
+router.get('/', checkAuth, function(req, res){
 
     usuarioModel.find({}, function(err, result){
         if(err) {
@@ -35,7 +36,7 @@ router.post('/', function(req, res){
     })
 });
 
-router.get('/:id', function(req, res){
+router.get('/:id', checkAuth, function(req, res){
     usuarioModel.findById(req.params.id, function(err, result){
         if(err){            
             res.status(500).json({err});
