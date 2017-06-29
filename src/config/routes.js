@@ -3,5 +3,5 @@ var authController = require('../api/controllers/auth')
 
 module.exports = function(server){
     server.use('/api/usuario', usuarioController);
-    server.use('/api/', authController);
+    server.use('/', authController);
 }

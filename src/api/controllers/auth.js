@@ -20,7 +20,7 @@ router.post('/signup', function(req, res){
             usuario.token = usuario.generateHash(Date.now());
 
             var link = req.protocol + '://' + 
-                       req.hostname + ':3000' + '/api/auth/confirm_account?token=' +
+                       req.hostname + ':3000' + '/auth/confirm_account?token=' +
                        usuario.token;
 
             emailService.signupEmail(usuario, link, function(result){
@@ -63,7 +63,8 @@ router.post('/authenticate', function(req, res){
         }
         else{
             const payload = {
-                sub: user._id
+                sub: user._id,
+                //admin: user.admin --> boolean
             };
 
             // create a token string
