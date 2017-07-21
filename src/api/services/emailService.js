@@ -23,7 +23,7 @@ module.exports = {
                 transport.sendMail({
                     from: "petfinder@outlook.com",
                     to: user.email,
-                    subject: "Bem vindo ao PetFinder",
+                    subject: "Bem vindo ao My Clinic",
                     html: result.html
                 }, function (err, responseStatus) {
                     if (err) {

@@ -7,6 +7,10 @@ const server = express();
 const allowCors = require('./cors');
 const queryParser = require('express-query-int');
 const logger = require('morgan');
+const moment = require('moment');
+
+// SET MOMENT AS PT-BR LOCALE
+moment.locale('pt-br');
 
 server.use(bodyParser.urlencoded({extended: true}));
 server.use(bodyParser.json());

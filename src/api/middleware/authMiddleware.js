@@ -15,12 +15,15 @@ module.exports = function(req, res, next){
         }
 
         const userId = decoded.sub;
+        console.log(userId)
 
         // check if a user exists
         user.findById(userId, (userErr, user) => {
             if (userErr || !user) {
                 return res.status(401).json({message: "Unauthorized"});
             }
+
+            req.usuario = user._id;
 
             return next();
         });
