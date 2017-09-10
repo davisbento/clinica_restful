@@ -27,21 +27,30 @@ router.post('/signup', function (req, res) {
                 req.hostname + ':4000' + '/auth/confirm_account?token=' +
                 usuario.token;
 
-            emailService.signupEmail(usuario, link, function (result) {
-                if (!result) {
-                    res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
+            usuario.save(function (err) {
+                if (err) {
+                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
                 }
                 else {
-                    usuario.save(function (err) {
-                        if (err) {
-                            res.status(500).json({ message: "Erro ao salvar usuário" + err });
-                        }
-                        else {
-                            res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
-                        }
-                    });
+                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
                 }
             });
+
+            // emailService.signupEmail(usuario, link, function (result) {
+            //     if (!result) {
+            //         res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
+            //     }
+            //     else {
+            //         usuario.save(function (err) {
+            //             if (err) {
+            //                 res.status(500).json({ message: "Erro ao salvar usuário" + err });
+            //             }
+            //             else {
+            //                 res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+            //             }
+            //         });
+            //     }
+            // });
         }
     })
 });
