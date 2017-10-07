@@ -130,6 +130,8 @@ router.post('/agendarExame', function (req, res) {
                     p.save();
 
                     res.status(200).json({ "message": "Paciente e agendamento criado com sucesso!" });
+
+
                 }
             });
         }
@@ -187,6 +189,20 @@ router.put('/:id', function (req, res) {
             res.status(400).json({ "error": "Erro ao localizar paciente" });
         }
         else {
+            // VERIFICA SE O A DATA DE NASCIMENTO JÁ ESTÁ FORMATADA  
+            if (req.body.data_nascimento !== '') {
+                var index = req.body.data_nascimento.indexOf('T')
+                // SE A DATA JÁ TIVER "T" ESTÁ OK, USE A MESMA VINDO DA APLICAÇÃO
+                if (index > 0) {
+                    paciente.data_nascimento = req.body.data_nascimento;
+                }
+                // SE NÃO, FORMATE A DATA
+                else {
+                    var dn = req.body.data_nascimento.split("/").reverse().join("-");
+                    var data_nascimento = dn + 'T00:00:00';
+                    paciente.data_nascimento = moment(data_nascimento).format() || '';
+                }
+            }
 
             paciente.nome = req.body.nome || '';
             paciente.cpf = req.body.cpf || '';
@@ -300,7 +316,10 @@ router.get('/listarProximosPacientes/', function (req, res) {
 
     pacienteModel.find(
         query,
-        { "telefone": 1, "cpf": 1, "nome": 1, "data_nascimento": 1, "profissao": 1, "agendamentos.$": 1, "historico": 1 },
+        {
+            "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
+            "profissao": 1, "agendamentos.$": 1, "historico": 1
+        },
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
             if (err) {
@@ -319,11 +338,14 @@ router.get('/listarProximosPacientes/:nome', function (req, res) {
     const nome = req.params.nome.toUpperCase()
     const query = {
         "agendamentos.start": { $gte: moment().format() },
-        "nome": nome
+        "nome": { $regex: new RegExp('^' + nome + '$') }
     }
     pacienteModel.find(
         query,
-        { "telefone": 1, "email": 1, "cpf": 1, "nome": 1, "data_nascimento": 1, "agendamentos.$": 1, "historico": 1 },
+        {
+            "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
+            "profissao": 1, "agendamentos.$": 1, "historico": 1
+        },
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
             if (err) {
@@ -425,7 +447,8 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
         { "agendamentos._id": req.params.agendamento_id },
         {
             "telefone": 1, "email": 1, "cpf": 1, "nome": 1, "profissao": 1, "recado": 1, "nome_mae": 1,
-            "data_nascimento": 1, "agendamentos.$": 1, "historico": 1
+            "data_nascimento": 1, "sexo": 1, "rua": 1, "endereco": 1, "bairro": 1, "cidade": 1,
+            "UF": 1, "agendamentos.$": 1, "historico": 1
         },
         function (err, paciente) {
             if (err) {

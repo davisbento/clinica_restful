@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
+const mongoURL = process.env.MONGODB_URI || 'mongodb://localhost/clinica_restful'
 mongoose.Promise = global.Promise
-module.exports = mongoose.connect('mongodb://localhost/clinica_restful', function(err){
+module.exports = mongoose.connect(mongoURL, function(err){
     if(err){
         console.log("Erro ao conectar no mongodb: " + err);
     }

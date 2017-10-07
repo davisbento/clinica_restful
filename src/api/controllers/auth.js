@@ -57,7 +57,7 @@ router.post('/signup', function (req, res) {
 
 router.post('/authenticate', function (req, res) {
     var pass = req.body.password;
-    var email = req.body.email;
+    var email = req.body.email.toLowerCase();
 
     var usuario = new usuarioModel();
 
