@@ -7,7 +7,8 @@ const usuarioSchema = mongoose.Schema({
     email_confirm: { type: Boolean, default: false },
     password: { type: String, required: true },
     data_cad: { type: Date, default: Date.now },
-    admin: { type: Boolean, default: false},
+    cargo: { type: Boolean, default: false},
+    clinica_id: { type: mongoose.Schema.Types.ObjectId },
     token: String,
 });
 

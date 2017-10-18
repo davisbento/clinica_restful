@@ -37,7 +37,9 @@ router.post('/', function (req, res) {
 });
 
 router.get('/list/:id', checkAuth, function (req, res) {
-    usuarioModel.findById(req.params.id, {nome: 1, email: 1, admin: 1, data_cad: 1, _id: 0}, function (err, result) {
+    usuarioModel.findById(req.params.id,
+         {nome: 1, email: 1, admin: 1, data_cad: 1, clinica_id: 1, cargo: 1, _id: 0}, 
+         function (err, result) {
         if (err) {
             res.status(500).json({ err });
         }

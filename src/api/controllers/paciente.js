@@ -3,6 +3,7 @@ var moment = require('moment');
 const router = express.Router();
 const pacienteModel = require('../models/paciente');
 const checkAuth = require('../middleware/authMiddleware');
+const mongoose = require('mongoose')
 
 function validForm(payload) {
     var errors = {};
@@ -37,13 +38,13 @@ function validPacienteForm(payload) {
     }
     else {
 
-        if (payload.cpf === undefined || payload.cpf === '') {
-            errors["cpf"] = "O campo cpf não pode ser vazio"
+        if (payload.cpf === undefined || payload.cpf.length < 11 || payload.cpf === '') {
+            errors["cpf"] = "O campo cpf não pode ser vazio ou menos de 11 caracteres"
             isValidForm = false;
         }
 
-        if (payload.telefone === undefined || payload.cpf === '') {
-            errors["telefone"] = "O campo telefone não pode ser vazio"
+        if (payload.telefone === undefined || payload.telefone.length < 8 || payload.telefone === '') {
+            errors["telefone"] = "O campo telefone não pode ser vazio ou menos de 8 caracteres"
             isValidForm = false;
         }
 
@@ -60,18 +61,19 @@ function validPacienteForm(payload) {
 }
 
 
-router.get('/list', function (req, res) {
-    pacienteModel.find({}, { "agendamentos": 0 }, function (err, result) {
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else if (result.length == 0) {
-            res.status(200).json({ message: "Nenhum paciente cadastrado" });
-        }
-        else {
-            res.status(200).json(result);
-        }
-    });
+router.get('/list/:clinica_id', function (req, res) {
+    pacienteModel.find({ "clinica_id": req.params.clinica_id },
+        { "agendamentos": 0 }, function (err, result) {
+            if (err) {
+                res.status(500).json({ err });
+            }
+            else if (result.length == 0) {
+                res.status(200).json({ message: "Nenhum paciente cadastrado" });
+            }
+            else {
+                res.status(200).json(result);
+            }
+        });
 });
 
 /*
@@ -87,7 +89,6 @@ router.post('/agendarExame', function (req, res) {
         })
     }
 
-    var p = new pacienteModel();
     var start_date = moment(req.body.start).format();
     // ADICIONA 30MIN A DATA INICIAL
     var end_date = moment(start_date).add(30, 'm');
@@ -98,19 +99,15 @@ router.post('/agendarExame', function (req, res) {
             res.status(500).json(err);
         }
         else if (!paciente) {
+            var p = new pacienteModel();
             var dn = req.body.data_nascimento.split("/").reverse().join("-");
             var data_nascimento = dn + 'T00:00:00';
 
-            p.nome = req.body.nome_paciente || '';
+            p.nome = req.body.nome_paciente.toUpperCase() || '';
             p.cpf = req.body.cpf || '';
             p.telefone = req.body.telefone || '';
-            p.recado = req.body.recado || '';
             p.data_nascimento = moment(data_nascimento).format() || '';
-            p.nome_mae = req.body.nome_mae || '';
-            p.endereco = req.body.endereco || '';
-            p.bairro = req.body.bairro || '';
-            p.cidade = req.body.cidade || '';
-            p.UF = req.body.UF || '';
+            p.clinica_id = req.body.clinica_id;
 
             p.save(function (err) {
                 if (err) {
@@ -121,7 +118,8 @@ router.post('/agendarExame', function (req, res) {
                         exame: req.body.nome_exame,
                         start: start_date,
                         end: end_date,
-                        title: req.body.nome_paciente,
+                        title: req.body.nome_paciente.toUpperCase(),
+                        convenio: req.body.convenio.toUpperCase(),
                         paciente_id: p._id
                     };
 
@@ -140,11 +138,13 @@ router.post('/agendarExame', function (req, res) {
                 exame: req.body.nome_exame,
                 start: start_date,
                 end: end_date,
-                title: req.body.nome_paciente,
+                title: req.body.nome_paciente.toUpperCase(),
+                convenio: req.body.convenio.toUpperCase(),
                 paciente_id: paciente._id
             };
 
             paciente.agendamentos.push(agendamento);
+            paciente.clinica_id = req.body.clinica_id;
 
             paciente.save(function (err) {
                 if (err) {
@@ -241,7 +241,8 @@ router.put('/atualizarExame/:id', function (req, res) {
             "$set": {
                 "agendamentos.$.start": start_date,
                 "agendamentos.$.end": end_date,
-                "agendamentos.$.status": req.body.status
+                "agendamentos.$.status": req.body.status,
+                "agendamentos.$.convenio": req.body.convenio
             }
         },
         function (err, result) {
@@ -261,17 +262,18 @@ router.put('/atualizarExame/:id', function (req, res) {
 /*
     @params: ?nome_exame=String
 */
-router.get('/listarExames', function (req, res) {
+router.get('/listarExames/:clinica_id', function (req, res) {
+    const id = mongoose.Types.ObjectId(req.params.clinica_id);
+
+    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "clinica_id": id }]
+
     pacienteModel.aggregate(
         [
             // Match the document containing the array element
-            { "$match": { "agendamentos.exame": req.query.nome_exame } },
+            { "$match": { $and: rules } },
 
             // Unwind to "de-normalize" the array content
             { "$unwind": "$agendamentos" },
-
-            // Match the specific array element
-            { "$match": { "agendamentos.exame": req.query.nome_exame } },
 
             // Group back and just return the fields you want
             {
@@ -286,7 +288,8 @@ router.get('/listarExames', function (req, res) {
                             "title": "$agendamentos.title",
                             "start": "$agendamentos.start",
                             "end": "$agendamentos.end",
-                            "status": "$agendamentos.status"
+                            "status": "$agendamentos.status",
+                            "convenio": "$agendamentos.convenio"
                         }
                     }
                 }
@@ -297,20 +300,24 @@ router.get('/listarExames', function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                res.send(err)
+                res.json(err)
             }
             else {
-                res.send(docs)
+                res.json(docs)
             }
         }
     );
 });
 
-router.get('/listarProximosPacientes/', function (req, res) {
+router.get('/listarProximosPacientes/:clinica_id', function (req, res) {
+    console.log(moment().format())
+    const id = req.params.clinica_id
+    
     const query = {
         $and: [
             { "agendamentos.start": { $gte: moment().format() } },
-            { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } }
+            { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } },
+            { "clinica_id": id }
         ]
     }
 
@@ -318,7 +325,7 @@ router.get('/listarProximosPacientes/', function (req, res) {
         query,
         {
             "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
-            "profissao": 1, "agendamentos.$": 1, "historico": 1
+            "profissao": 1, "clinica_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
@@ -464,10 +471,15 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
 });
 
 router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
+
     const historico = {
         anamnese: req.body.obs,
+        ref_din_esf: req.body.rdesf,
+        ref_din_cil: req.body.rdcil,
+        ref_din_eixo: req.body.rdeixo,
         data_consulta: moment().format()
     }
+
     pacienteModel.findOneAndUpdate(
         { "agendamentos._id": req.params.agendamento_id },
         {

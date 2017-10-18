@@ -1,10 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const usuarioModel = require('../models/usuario');
+const clinicaModel = require('../models/clinica');
 const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 
+
+function validaLoginForm(payload) {
+    var errors = {};
+    var isValidForm = true;
+
+    if (Object.keys(payload).length === 0 && payload.constructor === Object) {
+        errors["form"] = "O formulário deve ser preenchido!";
+        isValidForm = false;
+    }
+    else {
+
+        if (payload.nome === undefined || payload.nome.length < 3 || payload.nome === '') {
+            errors["nome"] = "O campo nome não pode ser vazio ou menos de 3 caracteres"
+            isValidForm = false;
+        }
+
+        if (payload.email === undefined || payload.email.length < 8 || payload.email === '') {
+            errors["email"] = "O campo email não pode ser vazio ou menos de 8 caracteres"
+            isValidForm = false;
+        }
+
+        if (payload.nome_clinica === undefined || payload.nome_clinica === '') {
+            errors["nome_clinica"] = "O campo nome_clinica pode ser vazio"
+            isValidForm = false;
+        }
+
+        if (payload.password === undefined || payload.password === '') {
+            errors["password"] = "O campo password não pode ser vazio"
+            isValidForm = false;
+        }
+    }
+
+    return {
+        success: isValidForm,
+        errors
+    }
+}
+
 router.post('/signup', function (req, res) {
+    var validationResult = validaLoginForm(req.body);
+
+    if (!validationResult.success) {
+        return res.status(400).json({
+            errors: validationResult.errors
+        })
+    }
+
+
     usuarioModel.findOne({ "email": req.body.email }, function (err, result) {
         var errors = {};
         if (err) {
@@ -17,22 +65,37 @@ router.post('/signup', function (req, res) {
             res.status(400).json({ errors, message });
         }
         else {
-            var usuario = new usuarioModel();
-            usuario.nome = req.body.nome;
-            usuario.email = req.body.email;
-            usuario.password = usuario.generateHash(req.body.password);
-            usuario.token = usuario.generateHash(Date.now());
+            // CRIA A CLINICA
+            var clinica = new clinicaModel();
 
-            var link = req.protocol + '://' +
-                req.hostname + ':4000' + '/auth/confirm_account?token=' +
-                usuario.token;
+            clinica.nome = req.body.nome_clinica;
 
-            usuario.save(function (err) {
+            clinica.save(function (err) {
                 if (err) {
-                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
+                    res.status(500).json({ message: "Erro ao criar clinica" + err });
                 }
                 else {
-                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                    var usuario = new usuarioModel();
+
+                    usuario.nome = req.body.nome;
+                    usuario.email = req.body.email;
+                    usuario.password = usuario.generateHash(req.body.password);
+                    usuario.token = usuario.generateHash(Date.now());
+                    usuario.cargo = req.body.cargo;
+                    usuario.clinica_id = clinica._id;
+
+                    var link = req.protocol + '://' +
+                        req.hostname + ':4000' + '/auth/confirm_account?token=' +
+                        usuario.token;
+
+                    usuario.save(function (err) {
+                        if (err) {
+                            res.status(500).json({ message: "Erro ao salvar usuário" + err });
+                        }
+                        else {
+                            res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                        }
+                    });
                 }
             });
 
@@ -57,7 +120,7 @@ router.post('/signup', function (req, res) {
 
 router.post('/authenticate', function (req, res) {
     var pass = req.body.password;
-    var email = req.body.email.toLowerCase();
+    var email = req.body.email;
 
     var usuario = new usuarioModel();
 
@@ -93,6 +156,7 @@ router.post('/authenticate', function (req, res) {
             res.status(200).json({
                 token,
                 _id: user._id,
+                clinica_id: user.clinica_id,
                 message: "Usuário autenticado, redirecionando..."
             });
         }

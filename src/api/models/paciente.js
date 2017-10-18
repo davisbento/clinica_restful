@@ -6,12 +6,16 @@ const agendamentoSchema = new mongoose.Schema({
     start: { type: String },
     end: { type: String },
     title: { type: String },
+    convenio: { type: String },
     status: { type: String, default: 'Agendado' },
     paciente_id: mongoose.Schema.Types.ObjectId
 });
 
 const historicoSchema = new mongoose.Schema({
     anamnese: { type: String },
+    ref_din_esf: { type: String },
+    ref_din_cil: { type: String },
+    ref_din_eixo: { type: String },
     data_consulta: { type: String }
 });
 
@@ -31,6 +35,7 @@ const pacienteSchema = new mongoose.Schema({
     bairro: { type: String },
     cidade: { type: String },
     UF: { type: String },
+    clinica_id: { type: mongoose.Schema.Types.ObjectId },
     agendamentos: [agendamentoSchema],
     historico: [historicoSchema]
 });
