@@ -119,18 +119,21 @@ router.post('/signup', function (req, res) {
 });
 
 router.post('/authenticate', function (req, res) {
-    var pass = req.body.password;
-    var email = req.body.email;
+    const pass = req.body.password;
 
-    var usuario = new usuarioModel();
+    const identificador = req.body.identificador;
 
-    usuarioModel.findOne({ "email": email }, function (err, user) {
-        var errors = {};
+    const criteria = (identificador.indexOf('@') === -1) ? { username: identificador } : { email: identificador };
+
+    const usuario = new usuarioModel();
+
+    usuarioModel.findOne(criteria, function (err, user) {
+        let errors = {};
         if (err) {
             res.status(500).json({ err });
         }
         else if (!user) {
-            errors.email = "E-mail não encontrado no sistema";
+            errors.identificador = "E-mail/usuário não encontrado no sistema";
             message = "Valide o formulário";
             res.status(400).json({ errors, message });
         }

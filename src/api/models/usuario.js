@@ -3,11 +3,13 @@ const bcrypt = require('bcrypt-nodejs');
 
 const usuarioSchema = mongoose.Schema({
     nome: { type: String, required: true },
+    username: { type: String },
     email: { type: String, required: true },
     email_confirm: { type: Boolean, default: false },
     password: { type: String, required: true },
     data_cad: { type: Date, default: Date.now },
-    cargo: { type: Boolean, default: false},
+    cargo: { type: String },
+    admin: { type: Boolean, default: false },
     clinica_id: { type: mongoose.Schema.Types.ObjectId },
     token: String,
 });

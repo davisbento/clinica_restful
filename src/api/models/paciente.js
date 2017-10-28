@@ -35,7 +35,7 @@ const pacienteSchema = new mongoose.Schema({
     bairro: { type: String },
     cidade: { type: String },
     UF: { type: String },
-    clinica_id: { type: mongoose.Schema.Types.ObjectId },
+    medico_id: { type: mongoose.Schema.Types.ObjectId },
     agendamentos: [agendamentoSchema],
     historico: [historicoSchema]
 });

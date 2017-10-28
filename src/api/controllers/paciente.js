@@ -1,7 +1,8 @@
 const express = require('express');
-var moment = require('moment');
+const moment = require('moment');
 const router = express.Router();
 const pacienteModel = require('../models/paciente');
+const usuarioModel = require('../models/usuario');
 const checkAuth = require('../middleware/authMiddleware');
 const mongoose = require('mongoose')
 
@@ -61,19 +62,47 @@ function validPacienteForm(payload) {
 }
 
 
-router.get('/list/:clinica_id', function (req, res) {
-    pacienteModel.find({ "clinica_id": req.params.clinica_id },
-        { "agendamentos": 0 }, function (err, result) {
-            if (err) {
-                res.status(500).json({ err });
-            }
-            else if (result.length == 0) {
-                res.status(200).json({ message: "Nenhum paciente cadastrado" });
-            }
-            else {
-                res.status(200).json(result);
-            }
-        });
+router.get('/listar/:id', function (req, res) {
+    pacienteModel.findById(req.params.id, function (err, result) {
+        if (err) {
+            res.status(500).json({ err });
+        }
+        else if (!result) {
+            res.status(400).json({ message: "Nenhum paciente encontrado" });
+        }
+        else {
+            res.status(200).json(result);
+        }
+    });
+});
+
+
+router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
+    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
+    usuarioModel.find({ $and: criteria }, function (err, dados) {
+        if (err) {
+            res.json(err)
+        }
+        else {
+            const medicosIds = dados.map(e => e._id)
+            pacienteModel.find(
+                { "medico_id": { $in: medicosIds } },
+                { "agendamentos": 0 },
+                function (err, result) {
+                    if (err) {
+                        res.status(500).json({ err });
+                    }
+                    else if (result.length == 0) {
+                        res.status(200).json({ message: "Nenhum paciente cadastrado" });
+                    }
+                    else {
+                        res.status(200).json(result);
+                    }
+                });
+        }
+    })
+
+
 });
 
 /*
@@ -107,7 +136,7 @@ router.post('/agendarExame', function (req, res) {
             p.cpf = req.body.cpf || '';
             p.telefone = req.body.telefone || '';
             p.data_nascimento = moment(data_nascimento).format() || '';
-            p.clinica_id = req.body.clinica_id;
+            p.medico_id = req.body.medico_id;
 
             p.save(function (err) {
                 if (err) {
@@ -144,7 +173,7 @@ router.post('/agendarExame', function (req, res) {
             };
 
             paciente.agendamentos.push(agendamento);
-            paciente.clinica_id = req.body.clinica_id;
+            paciente.medico_id = req.body.medico_id;
 
             paciente.save(function (err) {
                 if (err) {
@@ -309,15 +338,14 @@ router.get('/listarExames/:clinica_id', function (req, res) {
     );
 });
 
-router.get('/listarProximosPacientes/:clinica_id', function (req, res) {
-    console.log(moment().format())
-    const id = req.params.clinica_id
-    
+router.get('/listarProximosPacientes/:medico_id', function (req, res) {
+    const id = req.params.medico_id
+
     const query = {
         $and: [
             { "agendamentos.start": { $gte: moment().format() } },
             { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } },
-            { "clinica_id": id }
+            { "medico_id": id }
         ]
     }
 
@@ -325,7 +353,7 @@ router.get('/listarProximosPacientes/:clinica_id', function (req, res) {
         query,
         {
             "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
-            "profissao": 1, "clinica_id": 1, "agendamentos.$": 1, "historico": 1
+            "profissao": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
@@ -341,17 +369,18 @@ router.get('/listarProximosPacientes/:clinica_id', function (req, res) {
         });
 });
 
-router.get('/listarProximosPacientes/:nome', function (req, res) {
+router.get('/listarProximosPacientes/:medico_id/:nome', function (req, res) {
     const nome = req.params.nome.toUpperCase()
     const query = {
         "agendamentos.start": { $gte: moment().format() },
-        "nome": { $regex: new RegExp('^' + nome + '$') }
+        "nome": nome,
+        "clinica": req.params.medico_id
     }
     pacienteModel.find(
         query,
         {
             "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
-            "profissao": 1, "agendamentos.$": 1, "historico": 1
+            "profissao": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
@@ -408,9 +437,11 @@ router.post('/', function (req, res) {
 
 });
 
-router.get('/summary', function (req, res) {
-    var counter = {};
+router.get('/summary/:clinica_id', function (req, res) {
+    const id = mongoose.Types.ObjectId(req.params.clinica_id);
+    let counter = {};
     pacienteModel.aggregate([
+        { "$match": { "clinica_id": id } },
         // unwind binding collection
         { $unwind: "$agendamentos" },
 
@@ -429,22 +460,8 @@ router.get('/summary', function (req, res) {
             counter["agendamentos"] = docs[0].count;
             pacienteModel.count({}, function (err, dados) {
                 counter["pacientes"] = dados;
-                res.send(counter);
+                res.json(counter);
             });
-        }
-    });
-});
-
-router.get('/list/:id', function (req, res) {
-    pacienteModel.findById(req.params.id, function (err, result) {
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else if (!result) {
-            res.status(400).json({ message: "Nenhum paciente encontrado" });
-        }
-        else {
-            res.status(200).json(result);
         }
     });
 });

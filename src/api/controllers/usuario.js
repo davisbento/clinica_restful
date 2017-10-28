@@ -21,14 +21,18 @@ router.get('/list', checkAuth, function (req, res) {
 
 router.post('/', function (req, res) {
     var usuario = new usuarioModel();
+
     usuario.nome = req.body.nome;
-    usuario.email = req.body.email;
+    usuario.email = req.body.email || ' ';
+    usuario.username = req.body.username;
+    usuario.email_confirm = true;
+    usuario.clinica_id = req.body.clinica_id;
+    usuario.cargo = req.body.cargo;
     usuario.password = usuario.generateHash(req.body.password);
-    usuario.token = usuario.generateHash(Date.now());
 
     usuario.save(function (err) {
         if (err) {
-            res.status(500).json({ err });
+           console.log(err)
         }
         else {
             res.status(200).json({ "message": "Usuário criado com sucesso!" });
@@ -38,18 +42,18 @@ router.post('/', function (req, res) {
 
 router.get('/list/:id', checkAuth, function (req, res) {
     usuarioModel.findById(req.params.id,
-         {nome: 1, email: 1, admin: 1, data_cad: 1, clinica_id: 1, cargo: 1, _id: 0}, 
-         function (err, result) {
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else if (!result) {
-            res.status(400).json({ message: "Nenhum usuário encontrado" });
-        }
-        else {
-            res.status(200).json(result);
-        }
-    });
+        { nome: 1, email: 1, admin: 1, data_cad: 1, clinica_id: 1, username: 1, cargo: 1, _id: 0 },
+        function (err, result) {
+            if (err) {
+                res.status(500).json({ err });
+            }
+            else if (!result) {
+                res.status(400).json({ message: "Nenhum usuário encontrado" });
+            }
+            else {
+                res.status(200).json(result);
+            }
+        });
 });
 
 router.put('/:id', function (req, res) {
@@ -87,6 +91,21 @@ router.delete('/:id', function (req, res) {
         }
     });
 });
+
+router.get('/listarMedicos/:clinica_id', function (req, res) {
+    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
+
+    usuarioModel.find({ $and: criteria },
+        { "_id": 1, "nome": 1, "clinica_id": 1, "email": 1, "cargo": 1 },
+        function (err, medicos) {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                res.status(200).json(medicos)
+            }
+        });
+})
 
 module.exports = router
 
