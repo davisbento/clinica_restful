@@ -9,6 +9,7 @@ const moment = require('moment');
 const server = require('http').createServer(app);  
 const io = require('socket.io')(server);
 const PORT = process.env.PORT || 5000;
+const multiparty = require('connect-multiparty');
 
 
 // SET MOMENT AS PT-BR LOCALE
@@ -19,6 +20,7 @@ app.use(bodyParser.json());
 app.use(allowCors);
 app.use(queryParser());
 app.use(logger('dev'));
+app.use(multiparty());
 
 io.on('connection', socket => {
     console.log('USER CONNECTED');

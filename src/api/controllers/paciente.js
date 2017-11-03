@@ -4,7 +4,9 @@ const router = express.Router();
 const pacienteModel = require('../models/paciente');
 const usuarioModel = require('../models/usuario');
 const checkAuth = require('../middleware/authMiddleware');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const fs = require('fs');
+const util = require('util')
 
 function validForm(payload) {
     var errors = {};
@@ -87,7 +89,7 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
             const medicosIds = dados.map(e => e._id)
             pacienteModel.find(
                 { "medico_id": { $in: medicosIds } },
-                { "agendamentos": 0 },
+                { "agendamentos": 0, "historico": 0 },
                 function (err, result) {
                     if (err) {
                         res.status(500).json({ err });
@@ -101,8 +103,6 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
                 });
         }
     })
-
-
 });
 
 /*
@@ -338,6 +338,45 @@ router.get('/listarExames/:clinica_id', function (req, res) {
     );
 });
 
+router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
+    const clinica_id = req.params.clinica_id;
+    const busca = req.params.busca.toUpperCase();
+    const criteria = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
+
+    usuarioModel.find({ $and: criteria }, function (err, dados) {
+        if (err) {
+            res.status(500).json({ "errors": "Medico não localizado com essa clinica" })
+        }
+        else {
+            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
+
+            pacienteModel.find({ "medico_id": { $in: medicosIds } }, function (err, pacientes) {
+                if (err) {
+                    res.status(500).json({ "errors": "Erro ao localizar paciente" })
+                }
+                else {
+                    // FILTRA TODOS PACIENTES COM A STRING DA BUSCA NO NOME
+                    function filtroLike(paciente) {
+                        if (paciente.nome.indexOf(busca) >= 0) {
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+
+                    // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
+                    const pacienteFiltrado = pacientes.filter(filtroLike)
+
+                    res.status(200).json(pacienteFiltrado);
+                }
+            });
+
+        }
+    });
+
+})
+
 router.get('/listarProximosPacientes/:medico_id', function (req, res) {
     const id = req.params.medico_id
 
@@ -352,7 +391,7 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
     pacienteModel.find(
         query,
         {
-            "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
+            "telefone": 1, "url_imagem": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
             "profissao": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },
@@ -410,7 +449,7 @@ router.post('/', function (req, res) {
     var dn = req.body.data_nascimento.split("/").reverse().join("-");
     var data_nascimento = dn + 'T00:00:00';
 
-    p.nome = req.body.nome || '';
+    p.nome = req.body.nome.toUpperCase() || '';
     p.cpf = req.body.cpf || '';
     p.email = req.body.email || '';
     p.telefone = req.body.telefone || '';
@@ -440,30 +479,52 @@ router.post('/', function (req, res) {
 router.get('/summary/:clinica_id', function (req, res) {
     const id = mongoose.Types.ObjectId(req.params.clinica_id);
     let counter = {};
-    pacienteModel.aggregate([
-        { "$match": { "clinica_id": id } },
-        // unwind binding collection
-        { $unwind: "$agendamentos" },
-
-        // group and count by relevant attributes
-        {
-            $group: {
-                _id: 1,
-                count: { $sum: 1 }
-            }
-        }
-    ], function (err, docs) {
+    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
+    usuarioModel.find({ $and: criteria }, function (err, dados) {
         if (err) {
-            res.send(err)
+            res.json(err)
         }
         else {
-            counter["agendamentos"] = docs[0].count;
-            pacienteModel.count({}, function (err, dados) {
-                counter["pacientes"] = dados;
-                res.json(counter);
-            });
+            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
+            pacienteModel.find(
+                { "medico_id": { $in: medicosIds } },
+                { "agendamentos": 0 },
+                function (err, result) {
+                    if (err) {
+                        res.status(500).json({ err });
+                    }
+                    else if (result.length == 0) {
+                        res.status(200).json({ message: "Nenhum paciente cadastrado" });
+                    }
+                    else {
+                        pacienteModel.aggregate([
+                            { "$match": { "medico_id": { $in: medicosIds } } },
+                            // unwind binding collection
+                            { $unwind: "$agendamentos" },
+
+                            // group and count by relevant attributes
+                            {
+                                $group: {
+                                    _id: 1,
+                                    count: { $sum: 1 }
+                                }
+                            }
+                        ], function (err, docs) {
+                            if (err) {
+                                res.send(err)
+                            }
+                            else {
+                                counter["agendamentos"] = docs[0].count;
+                                pacienteModel.count({}, function (err, dados) {
+                                    counter["pacientes"] = dados;
+                                    res.json(counter);
+                                });
+                            }
+                        });
+                    }
+                });
         }
-    });
+    })
 });
 
 router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
@@ -487,13 +548,51 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
         });
 });
 
+router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
+    const id = req.params.historico_id;
+
+    const date = new Date();
+
+    const time_stamp = date.getTime();
+
+    const url_imagem = id + '_' + time_stamp + '_' + req.files.picture.originalFilename + '.png';
+
+    const path_origem = req.files.picture.path;
+
+    const path_destino = './uploads/' + url_imagem;
+
+    fs.rename(path_origem, path_destino, function (err) {
+        if (err) {
+            res.status(500).json({ "errors": err })
+        }
+        else {
+            console.log('SUCESSO!')
+            pacienteModel.findOneAndUpdate(
+                { "historico._id": id },
+                { $set: { "historico.$.url_imagem": url_imagem } },
+                function (err, result) {
+                    if (err) {
+                        res.status(500).json({ "errors": err })
+                    }
+                    else {
+                        res.status(200).json({ "message": "Imagem salva com sucesso!" })
+                    }
+                })
+        }
+    })
+
+})
+
 router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
+    const id = mongoose.Types.ObjectId();
 
     const historico = {
+        _id: id,
         anamnese: req.body.obs,
         ref_din_esf: req.body.rdesf,
         ref_din_cil: req.body.rdcil,
         ref_din_eixo: req.body.rdeixo,
+        url_imagem: '',
         data_consulta: moment().format()
     }
 
@@ -511,7 +610,12 @@ router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
                 res.status(400).json({ "errors": "Nenhum agendamento encontrado" });
             }
             else {
-                res.status(200).json({ "message": "Atendimento finalizado com sucesso!" });
+                res.status(200).json(
+                    {
+                        "message": "Atendimento finalizado com sucesso!",
+                        historico_id: id
+                    }
+                );
             }
         }
     );

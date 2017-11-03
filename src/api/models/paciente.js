@@ -13,6 +13,7 @@ const agendamentoSchema = new mongoose.Schema({
 
 const historicoSchema = new mongoose.Schema({
     anamnese: { type: String },
+    url_imagem: { type: String },
     ref_din_esf: { type: String },
     ref_din_cil: { type: String },
     ref_din_eixo: { type: String },

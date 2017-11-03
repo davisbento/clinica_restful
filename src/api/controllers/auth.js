@@ -4,7 +4,7 @@ const usuarioModel = require('../models/usuario');
 const clinicaModel = require('../models/clinica');
 const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
-
+const fs = require('fs');
 
 function validaLoginForm(payload) {
     var errors = {};
@@ -42,6 +42,21 @@ function validaLoginForm(payload) {
         errors
     }
 }
+
+
+router.get('/uploads/:imagem', function(req,res){
+    var img = req.params.imagem;
+
+    fs.readFile('./uploads/' + img, function(err, conteudo){
+        if(err){
+            res.status(400).json(err);
+            return;
+        }
+
+        res.writeHead(200, {'content-type': 'image/png'});
+        res.end(conteudo);
+    });
+});
 
 router.post('/signup', function (req, res) {
     var validationResult = validaLoginForm(req.body);

@@ -56,6 +56,9 @@ router.get('/listarConveniosPorMedico/:medico_id', function (req, res) {
         if (err) {
             console.log(err)
         }
+        else if (!medico) {
+            res.status(200).json({ convenios: [] })
+        }
         else {
             clinicaModel.findById(medico.clinica_id, function (err, clinica) {
                 if (err) {
