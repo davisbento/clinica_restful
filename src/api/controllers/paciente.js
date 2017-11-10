@@ -63,6 +63,22 @@ function validPacienteForm(payload) {
     }
 }
 
+const encontrarMedicosPorClinica = (clinica_id) => {
+    const rules = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
+    let medicosIds = [];
+
+    usuarioModel.find({ $and: rules }, function (err, medicos) {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            medicosIds = medicos.map(e => e._id)
+            console.log(medicosIds)
+            return medicosIds
+        }
+    })
+}
+
 
 router.get('/listar/:id', function (req, res) {
     pacienteModel.findById(req.params.id, function (err, result) {
@@ -77,6 +93,11 @@ router.get('/listar/:id', function (req, res) {
         }
     });
 });
+
+router.get('/teste/:clinica_id', function (req, res) {
+    const { medicosIds } = encontrarMedicosPorClinica(req.params.clinica_id)
+    res.json(medicosIds)
+})
 
 
 router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
@@ -293,6 +314,7 @@ router.put('/atualizarExame/:id', function (req, res) {
 */
 router.get('/listarExames/:clinica_id', function (req, res) {
     const id = mongoose.Types.ObjectId(req.params.clinica_id);
+
 
     const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "clinica_id": id }]
 
@@ -551,21 +573,15 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
 router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
     const id = req.params.historico_id;
 
-    const date = new Date();
+    const url_imagem = id + '_atendimentoscan.jpeg';
 
-    const time_stamp = date.getTime();
+    var base64Data = req.body.picture.replace(/^data:image\/(png|jpeg);base64,/, "");
 
-    const url_imagem = id + '_' + time_stamp + '_' + req.files.picture.originalFilename + '.png';
-
-    const path_origem = req.files.picture.path;
-
-    const path_destino = './uploads/' + url_imagem;
-
-    fs.rename(path_origem, path_destino, function (err) {
-        if (err) {
-            res.status(500).json({ "errors": err })
-        }
-        else {
+    fs.writeFile('./uploads/' + url_imagem, base64Data, 'base64',
+        function (err) {
+            if (err) {
+                return console.log(err);
+            }
             console.log('SUCESSO!')
             pacienteModel.findOneAndUpdate(
                 { "historico._id": id },
@@ -578,9 +594,7 @@ router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
                         res.status(200).json({ "message": "Imagem salva com sucesso!" })
                     }
                 })
-        }
-    })
-
+        });
 })
 
 router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {

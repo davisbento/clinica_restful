@@ -32,7 +32,7 @@ router.post('/', function (req, res) {
 
     usuario.save(function (err) {
         if (err) {
-           console.log(err)
+            console.log(err)
         }
         else {
             res.status(200).json({ "message": "Usuário criado com sucesso!" });
@@ -105,7 +105,26 @@ router.get('/listarMedicos/:clinica_id', function (req, res) {
                 res.status(200).json(medicos)
             }
         });
-})
+});
+
+router.get('/listarUsuarios/:clinica_id', function (req, res) {
+
+    usuarioModel.find(
+        { "clinica_id": req.params.clinica_id },
+        { "_id": 1, "nome": 1, "clinica_id": 1, "email": 1, "cargo": 1, "username": 1, "admin": 1 },
+        function (err, usuarios) {
+            if (err) {
+                res.status(500).json({ "errors": "Erro: " + err })
+            }
+            else if (usuarios.length == 0) {
+                res.status(500).json({ "errors": "Nenhum usuário encontrado para essa clinica!" })
+            }
+            else {
+                res.status(200).json(usuarios)
+            }
+        })
+
+});
 
 module.exports = router
 
