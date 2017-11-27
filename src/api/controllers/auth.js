@@ -27,12 +27,12 @@ function validaLoginForm(payload) {
         }
 
         if (payload.nome_clinica === undefined || payload.nome_clinica === '') {
-            errors["nome_clinica"] = "O campo nome_clinica pode ser vazio"
+            errors["nome_clinica"] = "O nome da clinica pode ser nulo"
             isValidForm = false;
         }
 
         if (payload.password === undefined || payload.password === '') {
-            errors["password"] = "O campo password não pode ser vazio"
+            errors["password"] = "O campo senha não pode ser vazio"
             isValidForm = false;
         }
     }
@@ -44,16 +44,16 @@ function validaLoginForm(payload) {
 }
 
 
-router.get('/uploads/:imagem', function(req,res){
+router.get('/uploads/:imagem', function (req, res) {
     var img = req.params.imagem;
 
-    fs.readFile('./uploads/' + img, function(err, conteudo){
-        if(err){
+    fs.readFile('./uploads/' + img, function (err, conteudo) {
+        if (err) {
             res.status(400).json(err);
             return;
         }
 
-        res.writeHead(200, {'content-type': 'image/png'});
+        res.writeHead(200, { 'content-type': 'image/png' });
         res.end(conteudo);
     });
 });
@@ -84,6 +84,7 @@ router.post('/signup', function (req, res) {
             var clinica = new clinicaModel();
 
             clinica.nome = req.body.nome_clinica;
+            clinica.nome = req.body.cidade;
 
             clinica.save(function (err) {
                 if (err) {
@@ -108,7 +109,7 @@ router.post('/signup', function (req, res) {
                             res.status(500).json({ message: "Erro ao salvar usuário" + err });
                         }
                         else {
-                            res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                            res.status(200).json({ message: "Clinica criada com sucesso! Confirme seu e-mail antes de logar!" });
                         }
                     });
                 }

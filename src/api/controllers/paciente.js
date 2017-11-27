@@ -193,8 +193,17 @@ router.post('/agendarExame', function (req, res) {
                 paciente_id: paciente._id
             };
 
-            paciente.agendamentos.push(agendamento);
+            paciente.nome = req.body.nome_paciente.toUpperCase() || '';
+            paciente.cpf = req.body.cpf || '';
+            paciente.telefone = req.body.telefone || '';
             paciente.medico_id = req.body.medico_id;
+
+            var dn = req.body.data_nascimento.split("/").reverse().join("-");
+            var data_nascimento = dn + 'T00:00:00';
+
+            paciente.data_nascimento = moment(data_nascimento).format() || '';
+
+            paciente.agendamentos.push(agendamento);
 
             paciente.save(function (err) {
                 if (err) {
@@ -313,10 +322,65 @@ router.put('/atualizarExame/:id', function (req, res) {
     @params: ?nome_exame=String
 */
 router.get('/listarExames/:clinica_id', function (req, res) {
-    const id = mongoose.Types.ObjectId(req.params.clinica_id);
+    const clinica_id = mongoose.Types.ObjectId(req.params.clinica_id);
+    const criteria = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
 
+    usuarioModel.find({ $and: criteria }, function (err, dados) {
+        if (err) {
+            res.status(500).json({ "errors": "Medico não localizado com essa clinica" })
+        }
+        else {
+            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
 
-    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "clinica_id": id }]
+            const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "medico_id": { $in: medicosIds } }]
+
+            pacienteModel.aggregate(
+                [
+                    // Match the document containing the array element
+                    { "$match": { $and: rules } },
+
+                    // Unwind to "de-normalize" the array content
+                    { "$unwind": "$agendamentos" },
+
+                    // Group back and just return the fields you want
+                    {
+                        "$group": {
+                            _id: null,
+                            agendamentos: {
+                                "$push":
+                                    {
+                                        "exame": "$agendamentos.exame",
+                                        "agendamento_id": "$agendamentos._id",
+                                        "paciente_id": "$agendamentos.paciente_id",
+                                        "title": "$agendamentos.title",
+                                        "start": "$agendamentos.start",
+                                        "end": "$agendamentos.end",
+                                        "status": "$agendamentos.status",
+                                        "convenio": "$agendamentos.convenio"
+                                    }
+                            }
+                        }
+                    },
+                    {
+                        "$project": { _id: 0, agendamentos: 1 }
+                    }
+                ],
+                function (err, docs) {
+                    if (err) {
+                        res.json(err)
+                    }
+                    else {
+                        res.json(docs)
+                    }
+                });
+        }
+    });
+});
+
+router.get('/listarExamesMedico/:medico_id', function (req, res) {
+    const medico_id = mongoose.Types.ObjectId(req.params.medico_id)
+
+    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "medico_id": medico_id }]
 
     pacienteModel.aggregate(
         [
@@ -332,16 +396,17 @@ router.get('/listarExames/:clinica_id', function (req, res) {
                     _id: null,
                     agendamentos: {
                         "$push":
-                        {
-                            "exame": "$agendamentos.exame",
-                            "agendamento_id": "$agendamentos._id",
-                            "paciente_id": "$agendamentos.paciente_id",
-                            "title": "$agendamentos.title",
-                            "start": "$agendamentos.start",
-                            "end": "$agendamentos.end",
-                            "status": "$agendamentos.status",
-                            "convenio": "$agendamentos.convenio"
-                        }
+                            {
+                                "exame": "$agendamentos.exame",
+                                "agendamento_id": "$agendamentos._id",
+                                "paciente_id": "$agendamentos.paciente_id",
+                                "medico_id": "$medico_id",
+                                "title": "$agendamentos.title",
+                                "start": "$agendamentos.start",
+                                "end": "$agendamentos.end",
+                                "status": "$agendamentos.status",
+                                "convenio": "$agendamentos.convenio"
+                            }
                     }
                 }
             },
@@ -356,9 +421,8 @@ router.get('/listarExames/:clinica_id', function (req, res) {
             else {
                 res.json(docs)
             }
-        }
-    );
-});
+        });
+})
 
 router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
     const clinica_id = req.params.clinica_id;
@@ -395,8 +459,7 @@ router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
             });
 
         }
-    });
-
+    })
 })
 
 router.get('/listarProximosPacientes/:medico_id', function (req, res) {
@@ -431,16 +494,19 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
 });
 
 router.get('/listarProximosPacientes/:medico_id/:nome', function (req, res) {
-    const nome = req.params.nome.toUpperCase()
+    const busca = req.params.nome.toUpperCase()
+    const id = req.params.medico_id
     const query = {
-        "agendamentos.start": { $gte: moment().format() },
-        "nome": nome,
-        "clinica": req.params.medico_id
+        $and: [
+            { "agendamentos.start": { $gte: moment().format() } },
+            { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } },
+            { "medico_id": id }
+        ]
     }
     pacienteModel.find(
         query,
         {
-            "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
+            "telefone": 1, "url_imagem": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
             "profissao": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },
@@ -449,7 +515,20 @@ router.get('/listarProximosPacientes/:medico_id/:nome', function (req, res) {
                 res.status(500).json({ err });
             }
             else if (paciente.length > 0) {
-                res.status(200).json(paciente)
+
+                // FILTRA TODOS PACIENTES COM A STRING DA "BUSCA" NO NOME
+                function filtroLike(paciente) {
+                    if (paciente.nome.indexOf(busca) >= 0) {
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+
+                const pacienteFiltrado = paciente.filter(filtroLike)
+
+                res.status(200).json(pacienteFiltrado)
             }
             else {
                 res.status(200).json([])
@@ -555,7 +634,7 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
         {
             "telefone": 1, "email": 1, "cpf": 1, "nome": 1, "profissao": 1, "recado": 1, "nome_mae": 1,
             "data_nascimento": 1, "sexo": 1, "rua": 1, "endereco": 1, "bairro": 1, "cidade": 1,
-            "UF": 1, "agendamentos.$": 1, "historico": 1
+            "UF": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         function (err, paciente) {
             if (err) {

@@ -73,4 +73,16 @@ router.get('/listarConveniosPorMedico/:medico_id', function (req, res) {
     })
 })
 
+router.get('/listarConveniosClinica/:clinica_id', function (req, res) {
+    clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            const convenios = clinica.convenios.map(e => e.nome)
+            res.json(convenios)
+        }
+    })
+})
+
 module.exports = router

@@ -22,7 +22,7 @@ router.get('/list', checkAuth, function (req, res) {
 router.post('/', function (req, res) {
     var usuario = new usuarioModel();
 
-    usuario.nome = req.body.nome;
+    usuario.nome = req.body.nome.toUpperCase();
     usuario.email = req.body.email || ' ';
     usuario.username = req.body.username;
     usuario.email_confirm = true;
@@ -125,6 +125,49 @@ router.get('/listarUsuarios/:clinica_id', function (req, res) {
         })
 
 });
+
+router.put('/changeAdmin/:usuario_id', function (req, res) {
+    usuarioModel.findOneAndUpdate(
+        { "_id": req.params.usuario_id },
+        { $set: { "admin": req.body.isAdmin } },
+        function (err, usuario) {
+            if (err) {
+                res.status(500).json({ "errors": "Erro: " + err })
+            }
+            else {
+                res.status(200).json({ message: "Usuário alterado com sucesso!" })
+            }
+        })
+});
+
+
+
+router.get('/pesquisarUsuario/:clinica_id/:busca', function (req, res) {
+    const clinica_id = req.params.clinica_id;
+    const busca = req.params.busca.toUpperCase();
+
+    usuarioModel.find({ "clinica_id": clinica_id }, function (err, usuarios) {
+        if (err) {
+            res.status(500).json({ "errors": "Medico não localizado com essa clinica" })
+        }
+        else {
+            // FILTRA TODOS PACIENTES COM A STRING DA BUSCA NO NOME
+            function filtroLike(usuario) {
+                if (usuario.nome.indexOf(busca) >= 0) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+
+            // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
+            const usuarioFiltrado = usuarios.filter(filtroLike)
+
+            res.status(200).json(usuarioFiltrado);
+        }
+    })
+})
 
 module.exports = router
 

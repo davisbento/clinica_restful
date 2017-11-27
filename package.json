@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/loader.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "nodemon -e js,html,css",
     "prod": "pm2 start src/loader.js --name clinica_restful"
   },
   "keywords": [],
@@ -26,12 +26,14 @@
     "mongoose-paginate": "^5.0.3",
     "node-restful": "^0.2.5",
     "nodemailer": "^4.0.1",
+    "nunjucks": "^3.0.1",
     "pm2": "^2.1.5",
     "pug": "^2.0.0-rc.2",
     "socket.io": "^2.0.3"
   },
   "devDependencies": {
     "morgan": "^1.8.2",
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.11.0",
+    "reload": "^2.2.2"
   }
 }

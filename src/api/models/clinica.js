@@ -8,6 +8,7 @@ const convenioSchema = new mongoose.Schema({
 
 const clinicaSchema = new mongoose.Schema({
     nome: { type: String },
+    cidade: { type: String },
     configuracoes: [],
     convenios: [convenioSchema]
 });

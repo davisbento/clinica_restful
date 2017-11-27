@@ -8,9 +8,21 @@ const logger = require('morgan');
 const moment = require('moment');
 const server = require('http').createServer(app);  
 const io = require('socket.io')(server);
-const PORT = process.env.PORT || 5000;
+const nunjucks = require('nunjucks');
 const multiparty = require('connect-multiparty');
+const path = require('path');
+const reload = require('reload');
+const PORT = process.env.PORT || 5000;
 
+
+app.use(express.static(path.join(__dirname, '../app/public')));
+
+nunjucks.configure(path.join(__dirname, '../app/views'), {
+    autoescape: true,
+    express: app
+});
+
+app.set('view engine', 'html');
 
 // SET MOMENT AS PT-BR LOCALE
 moment.locale('pt-br');
@@ -34,6 +46,9 @@ io.on('connection', socket => {
     })
     
 })
+
+// Reload code here 
+reload(app);
 
 server.listen(PORT, function(){
     console.log('BACKEND RUNNING ON PORT', PORT);

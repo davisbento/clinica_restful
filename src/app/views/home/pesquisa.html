@@ -1,0 +1,16 @@
+{% extends "../layout.html" %}
+
+
+{% block content %}
+
+    <div class='search-result'>
+          <h1>Pesquisa de Clinica</h1>
+          {% for reg in dados %}
+            <p>{{ reg.clinica }} - {{ reg.cidade }}</p>
+            {% else %}
+            <p>This would display if the 'item' collection were empty</p>
+          {% endfor %}
+    </div>
+  
+
+{% endblock %}
