@@ -79,6 +79,19 @@ const encontrarMedicosPorClinica = (clinica_id) => {
     })
 }
 
+router.get('/listar/', function (req, res) {
+    pacienteModel.find({}, function (err, result) {
+        if (err) {
+            res.status(500).json({ err });
+        }
+        else if (!result) {
+            res.status(400).json({ message: "Nenhum paciente encontrado" });
+        }
+        else {
+            res.status(200).json(result);
+        }
+    });
+});
 
 router.get('/listar/:id', function (req, res) {
     pacienteModel.findById(req.params.id, function (err, result) {
