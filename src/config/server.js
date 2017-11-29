@@ -11,7 +11,6 @@ const io = require('socket.io')(server);
 const nunjucks = require('nunjucks');
 const multiparty = require('connect-multiparty');
 const path = require('path');
-const reload = require('reload');
 const PORT = process.env.PORT || 5000;
 
 
@@ -47,8 +46,6 @@ io.on('connection', socket => {
     
 })
 
-// Reload code here 
-reload(app);
 
 server.listen(PORT, function(){
     console.log('BACKEND RUNNING ON PORT', PORT);
