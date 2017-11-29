@@ -5,7 +5,8 @@
   "main": "src/loader.js",
   "scripts": {
     "dev": "nodemon -e js,html,css",
-    "prod": "pm2 start src/loader.js --name clinica_restful"
+    "prod": "pm2 start src/loader.js --name clinica_restful",
+    "start" "node src/loader.js"
   },
   "keywords": [],
   "author": "",
