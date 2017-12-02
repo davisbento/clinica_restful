@@ -166,7 +166,7 @@ router.post('/agendarExame', function (req, res) {
             var dn = req.body.data_nascimento.split("/").reverse().join("-");
             var data_nascimento = dn + 'T00:00:00';
 
-            p.nome = req.body.nome_paciente.toUpperCase() || '';
+            p.nome = req.body.nome_paciente || '';
             p.cpf = req.body.cpf || '';
             p.telefone = req.body.telefone || '';
             p.data_nascimento = moment(data_nascimento).format() || '';
@@ -181,8 +181,8 @@ router.post('/agendarExame', function (req, res) {
                         exame: req.body.nome_exame,
                         start: start_date,
                         end: end_date,
-                        title: req.body.nome_paciente.toUpperCase(),
-                        convenio: req.body.convenio.toUpperCase(),
+                        title: req.body.nome_paciente,
+                        convenio: req.body.convenio,
                         paciente_id: p._id
                     };
 

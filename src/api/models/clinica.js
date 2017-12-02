@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
 
 const convenioSchema = new mongoose.Schema({
-    nome: { type: String },
+    nome: { type: String, uppercase: true },
     valor: { type: Number },
     medico_id: { type: mongoose.Schema.Types.ObjectId }
 })
 
 const clinicaSchema = new mongoose.Schema({
-    nome: { type: String },
-    cidade: { type: String },
-    endereco: { type: String },
+    nome: { type: String, uppercase: true },
+    cidade: { type: String, uppercase: true },
+    endereco: { type: String, uppercase: true },
     telefone: { type: String },
-    configuracoes: [],
+    especialidades: [],
     convenios: [convenioSchema]
 });
 
