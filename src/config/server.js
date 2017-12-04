@@ -42,8 +42,7 @@ io.on('connection', socket => {
 
         socket.broadcast.emit('AGENDAMENTO_INSERIDO_SUCESSO')
 
-    })
-    
+    })    
 })
 
 
