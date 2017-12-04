@@ -8,7 +8,9 @@
           {% for reg in dados %}
             <p>{{ reg.clinica }} - {{ reg.cidade }}</p>
             {% else %}
-            <p>This would display if the 'item' collection were empty</p>
+            <div class='alert alert-danger'>
+              <p>Nenhuma clinica encontrada com esses critérios!</p>
+            </div>            
           {% endfor %}
     </div>
   

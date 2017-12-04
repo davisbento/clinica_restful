@@ -22,7 +22,7 @@ router.put('/atualizarClinica/:clinica_id', function (req, res) {
             res.status(500).json({ "errors": "Erro ao localizar a clinica" })
         }
         else {
-            
+
             clinica.nome = req.body.nome;
             clinica.cidade = req.body.cidade;
             clinica.endereco = req.body.endereco;
@@ -121,6 +121,19 @@ router.get('/listarConveniosClinica/:clinica_id', function (req, res) {
         else {
             const convenios = clinica.convenios.map(e => e.nome)
             res.json(convenios)
+        }
+    })
+})
+
+router.get('/localizarClinica', function (req, res) {
+    const search = [{ "cidade": req.query.cidade.toUpperCase() },
+    { especialidades: req.query.especialidade }]
+    clinicaModel.find({ $and: search }, function (err, clinica) {
+        if (err) {
+            res.status(500).json(err)
+        }
+        else {
+            res.status(200).json(clinica)
         }
     })
 })
