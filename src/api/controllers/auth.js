@@ -99,6 +99,7 @@ router.post('/signup', function (req, res) {
                     usuario.token = usuario.generateHash(Date.now());
                     usuario.cargo = req.body.cargo;
                     usuario.clinica_id = clinica._id;
+                    usuario.admin = true;
 
                     var link = req.protocol + '://' +
                         req.hostname + ':4000' + '/auth/confirm_account?token=' +
