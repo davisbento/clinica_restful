@@ -4,10 +4,10 @@
   "description": "",
   "main": "src/loader.js",
   "scripts": {
-    "preinstall": "npm install pm2 -g",
+    "preinstall": "npm install nodemon -g",
     "dev": "nodemon -e js,html,css",
-    "prod": "pm2 start src/loader.js --name clinica_restful",
-    "start": "pm2 start src/loader.js -i max --attach"
+    "prod": "pm2 start src/loader.js -i max --attach",
+    "start": "nodemon src/loader.js"
   },
   "engines": {
     "node": "8.1.3",
