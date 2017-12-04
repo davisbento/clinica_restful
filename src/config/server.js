@@ -34,16 +34,9 @@ app.use(queryParser());
 app.use(multiparty());
 
 io.on('connection', socket => {
-    console.log('USER CONNECTED');
-
     socket.on('AGENDAMENTO_INSERIDO', function(data) {
-
-        console.log('DADOS RECEBIDOS COM SUCESSO!')
-
         socket.broadcast.emit('AGENDAMENTO_INSERIDO_SUCESSO')
-
     })
-    
 })
 
 
