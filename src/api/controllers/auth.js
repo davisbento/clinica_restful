@@ -84,7 +84,7 @@ router.post('/signup', function (req, res) {
             var clinica = new clinicaModel();
 
             clinica.nome = req.body.nome_clinica;
-            clinica.nome = req.body.cidade;
+            clinica.cidade = req.body.cidade;
 
             clinica.save(function (err) {
                 if (err) {
