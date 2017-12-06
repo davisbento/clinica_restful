@@ -5,14 +5,87 @@
 
     <div class='search-result'>
           <h1>Pesquisa de Clinica</h1>
-          {% for reg in dados %}
-            <p>{{ reg.clinica }} - {{ reg.cidade }}</p>
-            {% else %}
-            <div class='alert alert-danger'>
-              <p>Nenhuma clinica encontrada com esses critérios!</p>
-            </div>            
-          {% endfor %}
+          <div class='form-group'>
+              <label>Cidade:</label>
+              <input type='text' placeholder='Cidade' id='nome_cidade' class='form-control' />
+          </div>
+
+           <div class='form-group'>
+              <label>Especialidade:</label>
+              <input type='text' placeholder='Especialidade' id='especialidade' class='form-control' />
+          </div>
+
+           <div class='form-group'>
+             <button type='submit' class='btn btn-primary' onClick='pesquisar()'>Pesquisar</button> 
+           </div>
+                
+         
+
+          <div id='resultados'>         
+
+          </div>
+
     </div>
   
+  <script>
+    function pesquisar(){
+      $.ajax({
+          url: '/localizarClinica',
+          method: 'get',
+          data: {
+            cidade: $('#nome_cidade').val(),
+            especialidade: $('#especialidade').val() 
+            },
+             success: function(data, textStatus) {
+               console.log(data)
+               $( "#resultados" ).html('');
+               if(data.length > 0) {
+                for(reg in data) {
+                  const nome_clinica = `<td>${data[reg].nome}</td>`
+                  const endereco = `<td>${data[reg].endereco}</td>`
+                  const cidade = `<td>${data[reg].cidade}</td>`
+                  const telefone = `<td>${data[reg].telefone}</td>`
+                  const clinica_id = `
+                      <td>
+                        <a href="/clinica/${data[reg]._id}">
+                          <i class='fa fa-eye'></i>
+                        </a>
+                      </td>`
+
+                  const table = `
+                    <table class='table table-responsive'>
+                      <thead>
+                        <tr>
+                          <th>Clinica</th>
+                          <th>Endereço</th>
+                          <th>Cidade</th>
+                          <th>Telefone</th>
+                          <th>Visualizar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                            ${nome_clinica}
+                            ${endereco}
+                            ${cidade}
+                            ${telefone}
+                            ${clinica_id}
+                        </tr>
+                      </tbody>
+                    </table>
+                  `
+
+                  $('#resultados').append(table)
+
+                }
+               }
+               else {
+                 var not_found = '<h3 class="alert alert-danger">Nenhuma clinica encontrada</h3>'
+                 $('#resultados').append(not_found)
+               }
+            }
+        })
+    }
+  </script>
 
 {% endblock %}

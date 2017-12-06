@@ -1,5 +1,8 @@
 .search-result {
-    padding: 150px 400px;
-    text-align: center;
+    padding: 150px 200px;
     width: 100%;
+}
+
+.search-result h1 {
+    text-align: center;
 }

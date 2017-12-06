@@ -73,7 +73,6 @@ const encontrarMedicosPorClinica = (clinica_id) => {
         }
         else {
             medicosIds = medicos.map(e => e._id)
-            console.log(medicosIds)
             return medicosIds
         }
     })
@@ -129,7 +128,7 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
                         res.status(500).json({ err });
                     }
                     else if (result.length == 0) {
-                        res.status(200).json({ message: "Nenhum paciente cadastrado" });
+                        res.status(200).json([]);
                     }
                     else {
                         res.status(200).json(result);
@@ -477,10 +476,11 @@ router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
 
 router.get('/listarProximosPacientes/:medico_id', function (req, res) {
     const id = req.params.medico_id
+    var d = new Date()
 
     const query = {
         $and: [
-            { "agendamentos.start": { $gte: moment().format() } },
+            { "agendamentos.start": { $gte: moment(d.setHours(0, 0, 0, 0)).format() } },
             { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } },
             { "medico_id": id }
         ]
@@ -489,7 +489,7 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
     pacienteModel.find(
         query,
         {
-            "telefone": 1, "url_imagem": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
+            "telefone": 1, "status": 1, "cpf": 1, "nome": 1, "data_nascimento": 1,
             "profissao": 1, "medico_id": 1, "agendamentos.$": 1, "historico": 1
         },
         { sort: { "agendamentos.start": 1 } },

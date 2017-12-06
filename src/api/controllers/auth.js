@@ -75,7 +75,7 @@ router.post('/signup', function (req, res) {
             res.status(500).json({ message });
         }
         else if (result) {
-            errors.email = "E-mail já cadastrado no sistema!";
+            errors.identificador = "E-mail já cadastrado no sistema!";
             message = "Tente um outro endereço de e-mail ou recupere sua senha.";
             res.status(400).json({ errors, message });
         }
@@ -160,7 +160,7 @@ router.post('/authenticate', function (req, res) {
             res.status(400).json({ errors, message });
         }
         else if (!user.email_confirm) {
-            errors.email = "E-mail não confirmado, confirme seu e-mail antes de logar";
+            errors.identificador = "E-mail não confirmado, confirme seu e-mail antes de logar";
             message = "Valide o formulário";
             res.status(400).json({ errors, message });
         }
