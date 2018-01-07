@@ -69,7 +69,7 @@ const encontrarMedicosPorClinica = (clinica_id) => {
 
     usuarioModel.find({ $and: rules }, function (err, medicos) {
         if (err) {
-            console.log(err)
+            res.status(500).json({ err });
         }
         else {
             medicosIds = medicos.map(e => e._id)
@@ -81,7 +81,7 @@ const encontrarMedicosPorClinica = (clinica_id) => {
 router.get('/listar/', function (req, res) {
     pacienteModel.find({}, function (err, result) {
         if (err) {
-            res.status(500).json({ err });
+            res.status(500).json({ "errors": err });
         }
         else if (!result) {
             res.status(400).json({ message: "Nenhum paciente encontrado" });
@@ -95,7 +95,7 @@ router.get('/listar/', function (req, res) {
 router.get('/listar/:id', function (req, res) {
     pacienteModel.findById(req.params.id, function (err, result) {
         if (err) {
-            res.status(500).json({ err });
+            res.status(500).json({"errors": err });
         }
         else if (!result) {
             res.status(400).json({ message: "Nenhum paciente encontrado" });
@@ -158,7 +158,7 @@ router.post('/agendarExame', function (req, res) {
 
     pacienteModel.findOne({ 'cpf': req.body.cpf }, function (err, paciente) {
         if (err) {
-            res.status(500).json(err);
+            res.status(500).json({"errors": err});
         }
         else if (!paciente) {
             var p = new pacienteModel();
@@ -290,7 +290,7 @@ router.put('/:id', function (req, res) {
 
             paciente.save(function (err) {
                 if (err) {
-                    res.status(500).json({ err });
+                    res.status(500).json({"errors": err});
                 }
                 else {
                     res.status(200).json({ "message": "Paciente alterado com sucesso!" });
@@ -481,7 +481,7 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
     const query = {
         $and: [
             { "agendamentos.start": { $gte: moment(d.setHours(0, 0, 0, 0)).format() } },
-            { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em atendimento"] } },
+            { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em Atendimento"] } },
             { "medico_id": id }
         ]
     }
@@ -672,9 +672,8 @@ router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
     fs.writeFile('./uploads/' + url_imagem, base64Data, 'base64',
         function (err) {
             if (err) {
-                return console.log(err);
+                res.status(500).json({ "errors": err })
             }
-            console.log('SUCESSO!')
             pacienteModel.findOneAndUpdate(
                 { "historico._id": id },
                 { $set: { "historico.$.url_imagem": url_imagem } },
@@ -689,15 +688,55 @@ router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
         });
 })
 
+router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
+    pacienteModel.findOneAndUpdate(
+        { "agendamentos._id": req.params.agendamento_id },
+        {
+            "$set": { "agendamentos.$.status": req.query.status }
+        },
+        function (err, result) {
+            if (err) {
+                res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
+            }
+            else if (!result) {
+                res.status(400).json({ "errors": "Nenhum agendamento encontrado" });
+            }
+            else {
+                res.status(200).json(
+                    {
+                        "message": "Atendimento atualizado com sucesso!"
+                    }
+                );
+            }
+        }
+    );
+});
+
+
+
 router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
     const id = mongoose.Types.ObjectId();
 
     const historico = {
         _id: id,
         anamnese: req.body.obs,
-        ref_din_esf: req.body.rdesf,
-        ref_din_cil: req.body.rdcil,
-        ref_din_eixo: req.body.rdeixo,
+        ref_din_esf_esq: req.body.rdesf_esq,
+        ref_din_cil_esq: req.body.rdcil_esq,
+        ref_din_eixo_esq: req.body.rdeixo_esq,
+        ref_din_av_esq: req.body.rdAV_esq,
+        ref_est_esf_esq: req.body.reesf_esq,
+        ref_est_cil_esq: req.body.recil_esq,
+        ref_est_eixo_esq: req.body.reeixo_esq,
+        ref_est_av_esq: req.body.reAV_esq,
+        ref_din_esf_dir: req.body.rdesf_dir,
+        ref_din_cil_dir: req.body.rdcil_dir,
+        ref_din_eixo_dir: req.body.rdeixo_dir,
+        ref_din_av_dir: req.body.rdAV_dir,
+        ref_est_esf_dir: req.body.reesf_dir,
+        ref_est_cil_dir: req.body.recil_dir,
+        ref_est_eixo_dir:  req.body.reeixo_dir,  
+        ref_est_av_dir: req.body.reAV_dir,
+        adicao: req.body.adicao,
         url_imagem: '',
         data_consulta: moment().format()
     }

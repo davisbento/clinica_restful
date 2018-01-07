@@ -14,9 +14,23 @@ const agendamentoSchema = new mongoose.Schema({
 const historicoSchema = new mongoose.Schema({
     anamnese: { type: String },
     url_imagem: { type: String },
-    ref_din_esf: { type: String },
-    ref_din_cil: { type: String },
-    ref_din_eixo: { type: String },
+    ref_din_esf_esq: { type: String },
+    ref_din_cil_esq: { type: String },
+    ref_din_eixo_esq: { type: String },
+    ref_din_av_esq: { type: String },
+    ref_est_esf_esq: { type: String },
+    ref_est_cil_esq: { type: String },
+    ref_est_eixo_esq: { type: String },   
+    ref_est_av_esq: { type: String },
+    ref_din_esf_dir: { type: String },
+    ref_din_cil_dir: { type: String },
+    ref_din_eixo_dir: { type: String },
+    ref_din_av_dir: { type: String },
+    ref_est_esf_dir: { type: String },
+    ref_est_cil_dir: { type: String },
+    ref_est_eixo_dir: { type: String },   
+    ref_est_av_dir: { type: String },
+    adicao: { type: String },
     data_consulta: { type: String }
 });
 

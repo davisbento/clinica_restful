@@ -22,7 +22,7 @@ router.get('/list', checkAuth, function (req, res) {
 router.post('/', function (req, res) {
     var usuario = new usuarioModel();
 
-    usuario.nome = req.body.nome.toUpperCase();
+    usuario.nome = req.body.nome;
     usuario.email = req.body.email || ' ';
     usuario.username = req.body.username;
     usuario.email_confirm = true;
@@ -32,7 +32,7 @@ router.post('/', function (req, res) {
 
     usuario.save(function (err) {
         if (err) {
-            console.log(err)
+            res.status(500).json({ err });
         }
         else {
             res.status(200).json({ "message": "Usuário criado com sucesso!" });
@@ -99,7 +99,7 @@ router.get('/listarMedicos/:clinica_id', function (req, res) {
         { "_id": 1, "nome": 1, "clinica_id": 1, "email": 1, "cargo": 1 },
         function (err, medicos) {
             if (err) {
-                console.log(err)
+                res.status(500).json({ err });
             }
             else {
                 res.status(200).json(medicos)

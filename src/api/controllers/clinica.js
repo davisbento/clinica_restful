@@ -94,7 +94,7 @@ router.get('/listarConveniosPorMedico/:medico_id', function (req, res) {
     const id = req.params.medico_id;
     usuarioModel.findById(id, function (err, medico) {
         if (err) {
-            console.log(err)
+            res.status(500).json({ err });
         }
         else if (!medico) {
             res.status(200).json({ convenios: [] })
@@ -102,7 +102,7 @@ router.get('/listarConveniosPorMedico/:medico_id', function (req, res) {
         else {
             clinicaModel.findById(medico.clinica_id, function (err, clinica) {
                 if (err) {
-                    console.log(err)
+                    res.status(500).json({ err });
                 }
                 else {
                     const convenios = clinica.convenios.filter(e => e.medico_id == id)
@@ -116,7 +116,7 @@ router.get('/listarConveniosPorMedico/:medico_id', function (req, res) {
 router.get('/listarConveniosClinica/:clinica_id', function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
-            console.log(err)
+            res.status(500).json({ err });
         }
         else {
             const convenios = clinica.convenios.map(e => e.nome)

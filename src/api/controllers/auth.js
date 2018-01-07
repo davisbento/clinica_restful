@@ -99,6 +99,7 @@ router.post('/signup', function (req, res) {
                     usuario.token = usuario.generateHash(Date.now());
                     usuario.cargo = req.body.cargo;
                     usuario.clinica_id = clinica._id;
+                    usuario.email_confirm = true;
                     usuario.admin = true;
 
                     var link = req.protocol + '://' +
@@ -138,7 +139,7 @@ router.post('/signup', function (req, res) {
 router.post('/authenticate', function (req, res) {
     const pass = req.body.password;
 
-    const identificador = req.body.identificador;
+    const identificador = req.body.identificador.toLowerCase();
 
     const criteria = (identificador.indexOf('@') === -1) ? { username: identificador } : { email: identificador };
 
