@@ -63,8 +63,8 @@ router.post('/cadastrarConvenio/:clinica_id', function (req, res) {
         }
         else {
             const convenios = {
-                nome: req.body.nome_convenio,
-                valor: req.body.valor_convenio || 0,
+                nome: req.body.nome,
+                valor: req.body.valor || 0,
                 medico_id: req.body.medico_id
             };
 
@@ -131,7 +131,7 @@ router.get('/localizarClinica', function (req, res) {
             { "cidade": req.query.cidade.toUpperCase() },
             { especialidades: req.query.especialidade }
         ]
-        
+
     clinicaModel.find({ $and: search }, function (err, clinica) {
         if (err) {
             res.status(500).json(err)
@@ -140,6 +140,27 @@ router.get('/localizarClinica', function (req, res) {
             res.status(200).json(clinica)
         }
     })
+})
+
+router.put('/atualizarConvenio/:convenio_id', function (req, res) {
+    clinicaModel.findOneAndUpdate(
+        { "convenios._id": req.params.convenio_id },
+        {
+            "$set": {
+                "convenios.$.nome": req.body.nome.toUpperCase(),
+                "convenios.$.valor": req.body.valor,
+                "convenios.$.medico_id": req.body.medico_id
+            }
+        },
+        function (err, doc) {
+            if (err) {
+                res.status(500).json({ err: err })
+            }
+            else {
+                res.status(200).json({ message: "Convênio atualizado com sucesso!" })
+            }
+        }
+    );
 })
 
 module.exports = router

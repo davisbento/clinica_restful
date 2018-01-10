@@ -95,7 +95,7 @@ router.get('/listar/', function (req, res) {
 router.get('/listar/:id', function (req, res) {
     pacienteModel.findById(req.params.id, function (err, result) {
         if (err) {
-            res.status(500).json({"errors": err });
+            res.status(500).json({ "errors": err });
         }
         else if (!result) {
             res.status(400).json({ message: "Nenhum paciente encontrado" });
@@ -142,7 +142,6 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
     @params: nome_paciente, nome_exame, cpf, start, data_nascimento
 */
 router.post('/agendarExame', function (req, res) {
-
     var validationResult = validPacienteForm(req.body);
 
     if (!validationResult.success) {
@@ -158,7 +157,7 @@ router.post('/agendarExame', function (req, res) {
 
     pacienteModel.findOne({ 'cpf': req.body.cpf }, function (err, paciente) {
         if (err) {
-            res.status(500).json({"errors": err});
+            res.status(500).json({ "errors": err });
         }
         else if (!paciente) {
             var p = new pacienteModel();
@@ -290,7 +289,7 @@ router.put('/:id', function (req, res) {
 
             paciente.save(function (err) {
                 if (err) {
-                    res.status(500).json({"errors": err});
+                    res.status(500).json({ "errors": err });
                 }
                 else {
                     res.status(200).json({ "message": "Paciente alterado com sucesso!" });
@@ -734,7 +733,7 @@ router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
         ref_din_av_dir: req.body.rdAV_dir,
         ref_est_esf_dir: req.body.reesf_dir,
         ref_est_cil_dir: req.body.recil_dir,
-        ref_est_eixo_dir:  req.body.reeixo_dir,  
+        ref_est_eixo_dir: req.body.reeixo_dir,
         ref_est_av_dir: req.body.reAV_dir,
         adicao: req.body.adicao,
         url_imagem: '',
@@ -764,6 +763,38 @@ router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
             }
         }
     );
+});
+
+router.delete('/removerHistorico/:historico_id', function (req, res) {
+    pacienteModel.findOne({ "historico._id": req.params.historico_id },
+        {
+            "cpf": 1, "nome": 1, "profissao": 1, "idade": 1, "historico": 1
+        },
+        function (err, paciente) {
+            if (err) {
+                res.status(500).json({ "errors": err });
+            }
+            else {
+                const filtrarHistorico = (element) => {
+                    if (element._id != req.params.historico_id) {
+                        return true
+                    }
+                    return false
+                }
+
+                paciente.historico = paciente.historico.filter(filtrarHistorico);
+
+                paciente.save(function (err) {
+                    if (err) {
+                        res.status(500).json({ "errors": "Erro ao salvar historico alterado" });
+                    }
+                    else {
+                        res.status(200).json({ "message": "Histórico removido com sucesso!", "paciente": paciente })
+                    }
+                })
+            }
+        })
+
 });
 
 module.exports = router;

@@ -3,6 +3,38 @@ const router = express.Router();
 const usuarioModel = require('../models/usuario');
 const checkAuth = require('../middleware/authMiddleware');
 
+function validaUsuarioForm(payload) {
+    var errors = {};
+    var isValidForm = true;
+
+    if (Object.keys(payload).length === 0 && payload.constructor === Object) {
+        errors["form"] = "O formulário deve ser preenchido!";
+        isValidForm = false;
+    }
+    else {
+
+        if (payload.nome === undefined || payload.nome.length < 4 || payload.nome === '') {
+            errors["nome"] = "O campo nome não pode ser vazio ou menos de 4 caracteres"
+            isValidForm = false;
+        }
+
+        if (payload.username === undefined || payload.username.length < 6 || payload.username === '') {
+            errors["username"] = "O campo username não pode ser vazio ou menos de 6 caracteres"
+            isValidForm = false;
+        }
+
+        if (payload.password === undefined || payload.password.length < 6 || payload.password === '') {
+            errors["password"] = "O campo password não pode ser vazio ou menos de 6 caracteres"
+            isValidForm = false;
+        }
+    }
+
+    return {
+        success: isValidForm,
+        errors
+    }
+}
+
 router.get('/list', checkAuth, function (req, res) {
 
     usuarioModel.find({}, function (err, result) {
@@ -20,6 +52,14 @@ router.get('/list', checkAuth, function (req, res) {
 });
 
 router.post('/', function (req, res) {
+    const validationResult = validaUsuarioForm(req.body)
+
+    if (!validaUsuarioForm.success) {
+        return res.status(400).json({
+            errors: validationResult.errors
+        })
+    }
+
     var usuario = new usuarioModel();
 
     usuario.nome = req.body.nome;
@@ -57,14 +97,18 @@ router.get('/list/:id', checkAuth, function (req, res) {
 });
 
 router.put('/:id', function (req, res) {
-    usuarioModel.findOne({ "_id": req.params.id }, function (err, result) {
+    usuarioModel.findOne({ "_id": req.params.id }, function (err, usuario) {
         if (err) {
             res.status(500).json({ err });
         }
         else {
-            result.nome = req.body.nome || result.nome;
-            result.email = req.body.email || result.email;
-            result.save(function (err) {
+            usuario.nome = req.body.nome || usuario.nome;
+            usuario.email = req.body.email || usuario.email;
+            usuario.password = req.body.password || usuario.password
+            usuario.username = req.body.username || usuario.username
+            usuario.cargo = req.body.cargo || usuario.cargo
+
+            usuario.save(function (err) {
                 if (err) {
                     res.status(500).json({ err });
                 }
