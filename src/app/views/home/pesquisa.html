@@ -34,7 +34,7 @@
           method: 'get',
           data: {
             cidade: $('#nome_cidade').val(),
-            especialidade: $('#especialidade').val() 
+            especialidade: $('#especialidade').val() || ''
             },
              success: function(data, textStatus) {
                console.log(data)

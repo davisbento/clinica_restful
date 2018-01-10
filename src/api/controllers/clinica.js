@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const clinicaModel = require('../models/clinica');
 const usuarioModel = require('../models/usuario');
+const emailService = require('../services/emailService')
 
 router.get('/listar/:clinica_id', function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
@@ -126,11 +127,11 @@ router.get('/listarConveniosClinica/:clinica_id', function (req, res) {
 })
 
 router.get('/localizarClinica', function (req, res) {
-    const search =
-        [
-            { "cidade": req.query.cidade.toUpperCase() },
-            { especialidades: req.query.especialidade }
-        ]
+    const search = [{ "cidade": req.query.cidade.toUpperCase() }]
+
+    if (req.query.especialidade !== '') {
+        search.push({ especialidades: req.query.especialidade })
+    }
 
     clinicaModel.find({ $and: search }, function (err, clinica) {
         if (err) {
@@ -161,6 +162,30 @@ router.put('/atualizarConvenio/:convenio_id', function (req, res) {
             }
         }
     );
+})
+
+router.post('/emailContato', function (req, res) {
+    const nome = req.body.name;
+    const email = req.body.email;
+    const phone = req.body.phone;
+    const message = req.body.message;
+
+    const emailMessage = `
+        'Nome: '${nome}
+        'Email: '${email}
+        'Telefone: '${phone}
+        ----------------------
+        ${message}
+    `
+
+    emailService.emailContato(email, emailMessage, function (result) {
+        if (!result) {
+            res.status(400).json({ message: "Erro ao enviar e-mail" });
+        }
+        else {
+            res.status(200).json({ message: "Email enviado com sucesso. Obrigado pelo contato!" });
+        }
+    });
 })
 
 module.exports = router

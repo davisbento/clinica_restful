@@ -10,7 +10,9 @@
                 <div class="intro-heading">
                     Tudo que você precisa para gerenciar sua clinica, totalmente online.
                 </div>
-                <a href="#services" class="page-scroll btn btn-xl">Comece um teste gratuito!</a>
+                <a href="http://app.clinicanaweb.online/signup" class="page-scroll btn btn-xl">
+                    Comece um teste gratuito!
+                </a>
             </div>
         </div>
     </header>
@@ -20,8 +22,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <h2 class="section-heading">Services</h2>
-                    <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                    <h2 class="section-heading">O que temos para oferecer</h2>
+                    {# <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3> #}
                 </div>
             </div>
             <div class="row text-center">
@@ -44,17 +46,17 @@
                 <div class="col-md-4">
                     <span class="fa-stack fa-4x">
                         <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                        <i class="fa fa-lock fa-stack-1x fa-inverse"></i>
+                        <i class="fa fa-dashboard fa-stack-1x fa-inverse"></i>
                     </span>
-                    <h4 class="service-heading">Web Security</h4>
-                    <p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minima maxime quam architecto quo inventore harum ex magni, dicta impedit.</p>
+                    <h4 class="service-heading">Dashboard intuitivo</h4>
+                    <p class="text-muted">Com nosso dashboard você sabe exatamente como sua clinica está indo.</p>
                 </div>
             </div>
         </div>
     </section>
 
    
-    <!-- About Section -->
+    {# <!-- About Section -->
     <section id="about">
         <div class="container">
             <div class="row">
@@ -133,8 +135,8 @@
                 </div>
             </div>
         </div>
-    </section>
-
+    </section> #}
+{# 
     <!-- Team Section -->
     <section id="team" class="bg-light-gray">
         <div class="container">
@@ -197,9 +199,9 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> #}
 
-    <!-- Clients Aside -->
+    {# <!-- Clients Aside -->
     <aside class="clients">
         <div class="container">
             <div class="row">
@@ -225,15 +227,15 @@
                 </div>
             </div>
         </div>
-    </aside>
+    </aside> #}
 
-    <!-- Contact Section -->
-    <section id="contact">
+ <!-- Contact Section -->
+   <section id="contact">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <h2 class="section-heading">Contact Us</h2>
-                    <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                    <h2 class="section-heading">Contato</h2>
+                    <h3 class="section-subheading text-muted">Nos envie suas mensagens, dúvidas em geral.</h3>
                 </div>
             </div>
             <div class="row">
@@ -242,28 +244,28 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" placeholder="Your Name *" id="name" required data-validation-required-message="Please enter your name.">
+                                    <input type="text" class="form-control" placeholder="Nome *" id="name" required data-validation-required-message="Por favor, informe seu nome.">
                                     <p class="help-block text-danger"></p>
                                 </div>
                                 <div class="form-group">
-                                    <input type="email" class="form-control" placeholder="Your Email *" id="email" required data-validation-required-message="Please enter your email address.">
+                                    <input type="email" class="form-control" placeholder="E-mail *" id="email" required data-validation-required-message="Por favor. informe seu e-mail.">
                                     <p class="help-block text-danger"></p>
                                 </div>
                                 <div class="form-group">
-                                    <input type="tel" class="form-control" placeholder="Your Phone *" id="phone" required data-validation-required-message="Please enter your phone number.">
+                                    <input type="tel" class="form-control" placeholder="Telefone *" id="phone" required data-validation-required-message="Por favor, informe seu telefone.">
                                     <p class="help-block text-danger"></p>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <textarea class="form-control" placeholder="Your Message *" id="message" required data-validation-required-message="Please enter a message."></textarea>
+                                    <textarea class="form-control" placeholder="Mensagem *" id="message" required data-validation-required-message="Escreva uma mensagem."></textarea>
                                     <p class="help-block text-danger"></p>
                                 </div>
                             </div>
                             <div class="clearfix"></div>
                             <div class="col-lg-12 text-center">
                                 <div id="success"></div>
-                                <button type="submit" class="btn btn-xl">Send Message</button>
+                                <button type="submit" class="btn btn-xl" id='btn-contato'>Enviar mensagem</button>
                             </div>
                         </div>
                     </form>
