@@ -35,4 +35,25 @@ router.get('/localizarClinica', function (req, res) {
     })
 })
 
+router.get('/confirm_account', function (req, res) {
+    var token = req.query.token;
+
+    usuarioModel.findOne({ token: token }, function (err, user) {
+        if (err) {
+            res.status(500).json({ err });
+        }
+        else if (!user.token) {
+            res.render('home/confirm_account', { message: "Token inválido", className: "alert alert-danger" })
+        }
+        else {
+            user.email_confirm = true;
+            user.token = 0;
+            user.save();
+            res.render('home/confirm_account', { message: "E-mail confirmado, efetue o login com seu usuário e senha!", className: "alert alert-success" })
+        }
+    });
+
+});
+
+
 module.exports = router;

@@ -54,7 +54,7 @@ router.get('/list', checkAuth, function (req, res) {
 router.post('/', function (req, res) {
     const validationResult = validaUsuarioForm(req.body)
 
-    if (!validaUsuarioForm.success) {
+    if (!validationResult.success) {
         return res.status(400).json({
             errors: validationResult.errors
         })

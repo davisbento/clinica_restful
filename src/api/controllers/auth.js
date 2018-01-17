@@ -6,6 +6,9 @@ const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
+const devURL = 'http://localhost:3000/confirm_account?token=';
+const prodURL = 'http://clinicanaweb.online/confirm_account?token=';
+
 function validaLoginForm(payload) {
     var errors = {};
     var isValidForm = true;
@@ -104,9 +107,7 @@ router.post('/signup', function (req, res) {
                     usuario.email_confirm = true;
                     usuario.admin = true;
 
-                    var link = req.protocol + '://' +
-                        req.hostname + ':4000' + '/auth/confirm_account?token=' +
-                        usuario.token;
+                    const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
 
                     usuario.save(function (err) {
                         if (err) {
@@ -119,21 +120,21 @@ router.post('/signup', function (req, res) {
                 }
             });
 
-            // emailService.signupEmail(usuario, link, function (result) {
-            //     if (!result) {
-            //         res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
-            //     }
-            //     else {
-            //         usuario.save(function (err) {
-            //             if (err) {
-            //                 res.status(500).json({ message: "Erro ao salvar usuário" + err });
-            //             }
-            //             else {
-            //                 res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
-            //             }
-            //         });
-            //     }
-            // });
+            emailService.signupEmail(usuario, link, function (result) {
+                if (!result) {
+                    res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
+                }
+                else {
+                    usuario.save(function (err) {
+                        if (err) {
+                            res.status(500).json({ message: "Erro ao salvar usuário" + err });
+                        }
+                        else {
+                            res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                        }
+                    });
+                }
+            });
         }
     })
 });
@@ -184,26 +185,6 @@ router.post('/authenticate', function (req, res) {
             });
         }
     });
-});
-
-router.get('/confirm_account', function (req, res) {
-    var token = req.query.token;
-
-    usuarioModel.findOne({ token: token }, function (err, user) {
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else if (!user.token) {
-            res.status(200).json({ message: "Token não encontrado" });
-        }
-        else {
-            user.email_confirm = true;
-            user.token = 0;
-            user.save();
-            res.status(200).json({ message: "Email confirmado com sucesso!" });
-        }
-    });
-
 });
 
 module.exports = router
