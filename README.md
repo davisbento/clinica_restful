@@ -3,3 +3,5 @@
 # clinica_restful
 - API para ser consumida via clinica_react
 - Em constante evolução
+- Node.JS com Express, MongoDB
+- Hospedagem Heroku com monitoramento Keymetrics(PM2)
