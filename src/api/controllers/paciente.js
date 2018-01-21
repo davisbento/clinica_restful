@@ -180,7 +180,7 @@ router.post('/agendarExame', function (req, res) {
                         start: start_date,
                         end: end_date,
                         title: req.body.nome_paciente,
-                        convenio: req.body.convenio,
+                        convenio_id: req.body.convenio_id,
                         paciente_id: p._id
                     };
 
@@ -200,7 +200,7 @@ router.post('/agendarExame', function (req, res) {
                 start: start_date,
                 end: end_date,
                 title: req.body.nome_paciente.toUpperCase(),
-                convenio: req.body.convenio.toUpperCase(),
+                convenio_id: req.body.convenio_id,
                 paciente_id: paciente._id
             };
 
@@ -797,4 +797,59 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
 
 });
 
-module.exports = router;
+router.get('/contagemPorConvenio/:clinica_id', function (req, res) {
+    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
+    usuarioModel.find({ $and: criteria }, function (err, dados) {
+        if (err) {
+            res.json(err)
+        }
+        else {
+            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
+
+            const rules = { "medico_id": { $in: medicosIds } }
+
+            pacienteModel.find(
+                { "medico_id": { $in: medicosIds } },
+                { "agendamentos": 1 },
+                function (err, pacientes) {
+                    if (err) {
+                        res.status(500).json({ err });
+                    }
+                    else if (pacientes.length == 0) {
+                        res.status(200).json([]);
+                    }
+                    else {
+                        pacienteModel.aggregate(
+                            [
+                                // Match the document containing the array element
+                                { "$match": rules },
+
+                                // Unwind to "de-normalize" the array content
+                                { "$unwind": "$agendamentos" },
+
+                                // Group back and just return the fields you want
+                                {
+                                    $group: {
+                                        _id: "$agendamentos.convenio_id",
+                                        count: { $sum: 1 }
+                                    }
+                                },
+                                { $project: { _id: 0, name: "$_id", value: "$count" } },
+                            ],
+                            function (err, result) {
+                                if (err) {
+                                    res.json(err)
+                                }
+                                else {
+                                    res.status(200).json(result)
+                                }
+                            });
+                    }
+                });
+        }
+
+    })
+})
+
+
+module.exports = router

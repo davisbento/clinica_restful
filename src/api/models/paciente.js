@@ -6,7 +6,7 @@ const agendamentoSchema = new mongoose.Schema({
     start: { type: String },
     end: { type: String },
     title: { type: String, uppercase: true  },
-    convenio: { type: String },
+    convenio_id: mongoose.Schema.Types.ObjectId,
     status: { type: String, default: 'Agendado' },
     paciente_id: mongoose.Schema.Types.ObjectId
 });

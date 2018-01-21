@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 const allowCors = require('./cors');
 const queryParser = require('express-query-int');
-// const logger = require('morgan');
+const morgan = require('morgan');
 const moment = require('moment');
 const server = require('http').createServer(app);  
 const io = require('socket.io')(server);
@@ -30,7 +30,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(allowCors);
 app.use(queryParser());
-// app.use(logger('dev'));
+app.use(morgan('combined'));
 app.use(multiparty());
 
 io.on('connection', socket => {
