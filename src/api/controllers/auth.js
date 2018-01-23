@@ -104,33 +104,24 @@ router.post('/signup', function (req, res) {
                     usuario.token = usuario.generateHash(Date.now());
                     usuario.cargo = req.body.cargo;
                     usuario.clinica_id = clinica._id;
-                    usuario.email_confirm = true;
+                    usuario.email_confirm = false;
                     usuario.admin = true;
 
                     const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
 
-                    usuario.save(function (err) {
-                        if (err) {
-                            res.status(500).json({ message: "Erro ao salvar usuário" + err });
+                    emailService.signupEmail(usuario, link, function (result) {
+                        if (!result) {
+                            res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
                         }
                         else {
-                            res.status(200).json({ message: "Clinica criada com sucesso! Confirme seu e-mail antes de logar!" });
-                        }
-                    });
-                }
-            });
-
-            emailService.signupEmail(usuario, link, function (result) {
-                if (!result) {
-                    res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
-                }
-                else {
-                    usuario.save(function (err) {
-                        if (err) {
-                            res.status(500).json({ message: "Erro ao salvar usuário" + err });
-                        }
-                        else {
-                            res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                            usuario.save(function (err) {
+                                if (err) {
+                                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
+                                }
+                                else {
+                                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+                                }
+                            });
                         }
                     });
                 }

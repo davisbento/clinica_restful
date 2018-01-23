@@ -8,7 +8,8 @@ const agendamentoSchema = new mongoose.Schema({
     title: { type: String, uppercase: true  },
     convenio_id: mongoose.Schema.Types.ObjectId,
     status: { type: String, default: 'Agendado' },
-    paciente_id: mongoose.Schema.Types.ObjectId
+    paciente_id: mongoose.Schema.Types.ObjectId,
+    medico_id: mongoose.Schema.Types.ObjectId
 });
 
 const historicoSchema = new mongoose.Schema({
@@ -50,7 +51,7 @@ const pacienteSchema = new mongoose.Schema({
     bairro: { type: String, uppercase: true },
     cidade: { type: String, uppercase: true },
     UF: { type: String, uppercase: true },
-    medico_id: { type: mongoose.Schema.Types.ObjectId },
+    clinica_id: { type: mongoose.Schema.Types.ObjectId },
     agendamentos: [agendamentoSchema],
     historico: [historicoSchema]
 });

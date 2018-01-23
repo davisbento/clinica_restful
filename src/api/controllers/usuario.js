@@ -214,4 +214,3 @@ router.get('/pesquisarUsuario/:clinica_id/:busca', function (req, res) {
 })
 
 module.exports = router
-

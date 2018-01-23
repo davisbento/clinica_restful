@@ -63,21 +63,6 @@ function validPacienteForm(payload) {
     }
 }
 
-const encontrarMedicosPorClinica = (clinica_id) => {
-    const rules = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
-    let medicosIds = [];
-
-    usuarioModel.find({ $and: rules }, function (err, medicos) {
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else {
-            medicosIds = medicos.map(e => e._id)
-            return medicosIds
-        }
-    })
-}
-
 router.get('/listar/', function (req, res) {
     pacienteModel.find({}, function (err, result) {
         if (err) {
@@ -106,42 +91,27 @@ router.get('/listar/:id', function (req, res) {
     });
 });
 
-router.get('/teste/:clinica_id', function (req, res) {
-    const { medicosIds } = encontrarMedicosPorClinica(req.params.clinica_id)
-    res.json(medicosIds)
-})
-
-
 router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
-    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
-    usuarioModel.find({ $and: criteria }, function (err, dados) {
-        if (err) {
-            res.json(err)
-        }
-        else {
-            const medicosIds = dados.map(e => e._id)
-            pacienteModel.find(
-                { "medico_id": { $in: medicosIds } },
-                { "agendamentos": 0, "historico": 0 },
-                function (err, result) {
-                    if (err) {
-                        res.status(500).json({ err });
-                    }
-                    else if (result.length == 0) {
-                        res.status(200).json([]);
-                    }
-                    else {
-                        res.status(200).json(result);
-                    }
-                });
-        }
-    })
+    pacienteModel.find(
+        { "clinica_id": req.params.clinica_id },
+        { "agendamentos": 0, "historico": 0 },
+        function (err, result) {
+            if (err) {
+                res.status(500).json({ err });
+            }
+            else if (result.length == 0) {
+                res.status(200).json([]);
+            }
+            else {
+                res.status(200).json(result);
+            }
+        });
 });
 
 /*
     @params: nome_paciente, nome_exame, cpf, start, data_nascimento
 */
-router.post('/agendarExame', function (req, res) {
+router.post('/agendarExame/:clinica_id', function (req, res) {
     var validationResult = validPacienteForm(req.body);
 
     if (!validationResult.success) {
@@ -168,7 +138,7 @@ router.post('/agendarExame', function (req, res) {
             p.cpf = req.body.cpf || '';
             p.telefone = req.body.telefone || '';
             p.data_nascimento = moment(data_nascimento).format() || '';
-            p.medico_id = req.body.medico_id;
+            p.clinica_id = req.params.clinica_id;
 
             p.save(function (err) {
                 if (err) {
@@ -181,7 +151,8 @@ router.post('/agendarExame', function (req, res) {
                         end: end_date,
                         title: req.body.nome_paciente,
                         convenio_id: req.body.convenio_id,
-                        paciente_id: p._id
+                        paciente_id: p._id,
+                        medico_id: req.body.medico_id
                     };
 
                     p.agendamentos.push(agendamento);
@@ -201,13 +172,14 @@ router.post('/agendarExame', function (req, res) {
                 end: end_date,
                 title: req.body.nome_paciente.toUpperCase(),
                 convenio_id: req.body.convenio_id,
-                paciente_id: paciente._id
+                paciente_id: paciente._id,
+                medico_id: req.body.medico_id
             };
 
             paciente.nome = req.body.nome_paciente.toUpperCase() || '';
             paciente.cpf = req.body.cpf || '';
             paciente.telefone = req.body.telefone || '';
-            paciente.medico_id = req.body.medico_id;
+            paciente.clinica_id = req.params.clinica_id;
 
             var dn = req.body.data_nascimento.split("/").reverse().join("-");
             var data_nascimento = dn + 'T00:00:00';
@@ -333,65 +305,8 @@ router.put('/atualizarExame/:id', function (req, res) {
     @params: ?nome_exame=String
 */
 router.get('/listarExames/:clinica_id', function (req, res) {
-    const clinica_id = mongoose.Types.ObjectId(req.params.clinica_id);
-    const criteria = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
-
-    usuarioModel.find({ $and: criteria }, function (err, dados) {
-        if (err) {
-            res.status(500).json({ "errors": "Medico não localizado com essa clinica" })
-        }
-        else {
-            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
-
-            const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "medico_id": { $in: medicosIds } }]
-
-            pacienteModel.aggregate(
-                [
-                    // Match the document containing the array element
-                    { "$match": { $and: rules } },
-
-                    // Unwind to "de-normalize" the array content
-                    { "$unwind": "$agendamentos" },
-
-                    // Group back and just return the fields you want
-                    {
-                        "$group": {
-                            _id: null,
-                            agendamentos: {
-                                "$push":
-                                    {
-                                        "exame": "$agendamentos.exame",
-                                        "agendamento_id": "$agendamentos._id",
-                                        "paciente_id": "$agendamentos.paciente_id",
-                                        "title": "$agendamentos.title",
-                                        "start": "$agendamentos.start",
-                                        "end": "$agendamentos.end",
-                                        "status": "$agendamentos.status",
-                                        "convenio": "$agendamentos.convenio"
-                                    }
-                            }
-                        }
-                    },
-                    {
-                        "$project": { _id: 0, agendamentos: 1 }
-                    }
-                ],
-                function (err, docs) {
-                    if (err) {
-                        res.json(err)
-                    }
-                    else {
-                        res.json(docs)
-                    }
-                });
-        }
-    });
-});
-
-router.get('/listarExamesMedico/:medico_id', function (req, res) {
-    const medico_id = mongoose.Types.ObjectId(req.params.medico_id)
-
-    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "medico_id": medico_id }]
+    const rules = [{ "agendamentos.exame": req.query.nome_exame },
+    { "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id) }]
 
     pacienteModel.aggregate(
         [
@@ -411,7 +326,53 @@ router.get('/listarExamesMedico/:medico_id', function (req, res) {
                                 "exame": "$agendamentos.exame",
                                 "agendamento_id": "$agendamentos._id",
                                 "paciente_id": "$agendamentos.paciente_id",
-                                "medico_id": "$medico_id",
+                                "title": "$agendamentos.title",
+                                "start": "$agendamentos.start",
+                                "end": "$agendamentos.end",
+                                "status": "$agendamentos.status",
+                                "convenio": "$agendamentos.convenio"
+                            }
+                    }
+                }
+            },
+            {
+                "$project": { _id: 0, agendamentos: 1 }
+            }
+        ],
+        function (err, docs) {
+            if (err) {
+                res.json(err)
+            }
+            else {
+                res.json(docs)
+            }
+        });
+});
+
+router.get('/listarExamesMedico/:medico_id', function (req, res) {
+    const medico_id = mongoose.Types.ObjectId(req.params.medico_id)
+
+    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "agendamentos.medico_id": medico_id }]
+
+    pacienteModel.aggregate(
+        [
+            // Match the document containing the array element
+            { "$match": { $and: rules } },
+
+            // Unwind to "de-normalize" the array content
+            { "$unwind": "$agendamentos" },
+
+            // Group back and just return the fields you want
+            {
+                "$group": {
+                    _id: null,
+                    agendamentos: {
+                        "$push":
+                            {
+                                "exame": "$agendamentos.exame",
+                                "agendamento_id": "$agendamentos._id",
+                                "paciente_id": "$agendamentos.paciente_id",
+                                "medico_id": "$agendamentos.medico_id",
                                 "title": "$agendamentos.title",
                                 "start": "$agendamentos.start",
                                 "end": "$agendamentos.end",
@@ -438,50 +399,39 @@ router.get('/listarExamesMedico/:medico_id', function (req, res) {
 router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
     const clinica_id = req.params.clinica_id;
     const busca = req.params.busca.toUpperCase();
-    const criteria = [{ "clinica_id": clinica_id }, { "cargo": "Medico" }];
 
-    usuarioModel.find({ $and: criteria }, function (err, dados) {
+    pacienteModel.find({ "clinica_id": clinica_id }, function (err, pacientes) {
         if (err) {
-            res.status(500).json({ "errors": "Medico não localizado com essa clinica" })
+            res.status(500).json({ "errors": "Erro ao localizar paciente" })
         }
         else {
-            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
-
-            pacienteModel.find({ "medico_id": { $in: medicosIds } }, function (err, pacientes) {
-                if (err) {
-                    res.status(500).json({ "errors": "Erro ao localizar paciente" })
+            // FILTRA TODOS PACIENTES COM A STRING DA BUSCA NO NOME
+            function filtroLike(paciente) {
+                if (paciente.nome.indexOf(busca) >= 0) {
+                    return true;
                 }
                 else {
-                    // FILTRA TODOS PACIENTES COM A STRING DA BUSCA NO NOME
-                    function filtroLike(paciente) {
-                        if (paciente.nome.indexOf(busca) >= 0) {
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    }
-
-                    // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
-                    const pacienteFiltrado = pacientes.filter(filtroLike)
-
-                    res.status(200).json(pacienteFiltrado);
+                    return false;
                 }
-            });
+            }
 
+            // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
+            const pacienteFiltrado = pacientes.filter(filtroLike)
+
+            res.status(200).json(pacienteFiltrado);
         }
-    })
+    });
 })
 
 router.get('/listarProximosPacientes/:medico_id', function (req, res) {
-    const id = req.params.medico_id
+    const medico_id = req.params.medico_id
     var d = new Date()
 
     const query = {
         $and: [
             { "agendamentos.start": { $gte: moment(d.setHours(0, 0, 0, 0)).format() } },
             { "agendamentos.status": { $in: ["Aguardando Atendimento", "Em Atendimento"] } },
-            { "medico_id": id }
+            { "agendamentos.medico_id": medico_id }
         ]
     }
 
@@ -590,54 +540,32 @@ router.post('/', function (req, res) {
 });
 
 router.get('/summary/:clinica_id', function (req, res) {
-    const id = mongoose.Types.ObjectId(req.params.clinica_id);
+    const clinica_id = mongoose.Types.ObjectId(req.params.clinica_id);
     let counter = {};
-    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
-    usuarioModel.find({ $and: criteria }, function (err, dados) {
+    pacienteModel.aggregate([
+        { "$match": { "clinica_id": clinica_id } },
+        // unwind binding collection
+        { $unwind: "$agendamentos" },
+
+        // group and count by relevant attributes
+        {
+            $group: {
+                _id: 1,
+                count: { $sum: 1 }
+            }
+        }
+    ], function (err, docs) {
         if (err) {
-            res.json(err)
+            res.send(err)
         }
         else {
-            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
-            pacienteModel.find(
-                { "medico_id": { $in: medicosIds } },
-                { "agendamentos": 0 },
-                function (err, result) {
-                    if (err) {
-                        res.status(500).json({ err });
-                    }
-                    else if (result.length == 0) {
-                        res.status(200).json({ message: "Nenhum paciente cadastrado" });
-                    }
-                    else {
-                        pacienteModel.aggregate([
-                            { "$match": { "medico_id": { $in: medicosIds } } },
-                            // unwind binding collection
-                            { $unwind: "$agendamentos" },
-
-                            // group and count by relevant attributes
-                            {
-                                $group: {
-                                    _id: 1,
-                                    count: { $sum: 1 }
-                                }
-                            }
-                        ], function (err, docs) {
-                            if (err) {
-                                res.send(err)
-                            }
-                            else {
-                                counter["agendamentos"] = docs[0].count;
-                                pacienteModel.count({}, function (err, dados) {
-                                    counter["pacientes"] = dados;
-                                    res.json(counter);
-                                });
-                            }
-                        });
-                    }
-                });
+            counter["agendamentos"] = docs[0].count;
+            pacienteModel.count({}, function (err, dados) {
+                counter["pacientes"] = dados;
+                res.json(counter);
+            });
         }
-    })
+    });
 });
 
 router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
@@ -798,57 +726,44 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
 });
 
 router.get('/contagemPorConvenio/:clinica_id', function (req, res) {
-    const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
-    usuarioModel.find({ $and: criteria }, function (err, dados) {
-        if (err) {
-            res.json(err)
-        }
-        else {
-            const medicosIds = dados.map(e => mongoose.Types.ObjectId(e._id))
+    pacienteModel.find(
+        { "clinica_id": req.params.clinica_id },
+        { "agendamentos": 1 },
+        function (err, pacientes) {
+            if (err) {
+                res.status(500).json({ err });
+            }
+            else if (pacientes.length == 0) {
+                res.status(200).json([]);
+            }
+            else {
+                pacienteModel.aggregate(
+                    [
+                        // Match the document containing the array element
+                        { "$match": rules },
 
-            const rules = { "medico_id": { $in: medicosIds } }
+                        // Unwind to "de-normalize" the array content
+                        { "$unwind": "$agendamentos" },
 
-            pacienteModel.find(
-                { "medico_id": { $in: medicosIds } },
-                { "agendamentos": 1 },
-                function (err, pacientes) {
-                    if (err) {
-                        res.status(500).json({ err });
-                    }
-                    else if (pacientes.length == 0) {
-                        res.status(200).json([]);
-                    }
-                    else {
-                        pacienteModel.aggregate(
-                            [
-                                // Match the document containing the array element
-                                { "$match": rules },
-
-                                // Unwind to "de-normalize" the array content
-                                { "$unwind": "$agendamentos" },
-
-                                // Group back and just return the fields you want
-                                {
-                                    $group: {
-                                        _id: "$agendamentos.convenio_id",
-                                        count: { $sum: 1 }
-                                    }
-                                },
-                                { $project: { _id: 0, name: "$_id", value: "$count" } },
-                            ],
-                            function (err, result) {
-                                if (err) {
-                                    res.json(err)
-                                }
-                                else {
-                                    res.status(200).json(result)
-                                }
-                            });
-                    }
-                });
-        }
-
-    })
+                        // Group back and just return the fields you want
+                        {
+                            $group: {
+                                _id: "$agendamentos.convenio_id",
+                                count: { $sum: 1 }
+                            }
+                        },
+                        { $project: { _id: 0, name: "$_id", value: "$count" } },
+                    ],
+                    function (err, result) {
+                        if (err) {
+                            res.json(err)
+                        }
+                        else {
+                            res.status(200).json(result)
+                        }
+                    });
+            }
+        });
 })
 
 

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose')
 const prodURL = `mongodb://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@ds125146.mlab.com:25146/my-clinic-db`
 const devURL = 'mongodb://localhost/clinica_restful'
-const mongoURL = process.env.NODE_ENV !== 'production' ?  devURL : prodURL
+const mongoURL = process.env.NODE_ENV !== 'production' ? devURL : prodURL
 
 mongoose.Promise = global.Promise
-module.exports = mongoose.connect(mongoURL, function(err){
-    if(err){
+module.exports = mongoose.connect(mongoURL, { useMongoClient: true }, function (err) {
+    if (err) {
         console.log("Erro ao conectar no mongodb: " + err);
     }
     else {
