@@ -4,8 +4,9 @@ var templateDir = path.join(__dirname, '..', 'templates', 'welcome');
 var welcome = new EmailTemplate(templateDir);
 var nodemailer = require('nodemailer');
 
-var defaultTransport = nodemailer.createTransport("SMTP", {
+var defaultTransport = nodemailer.createTransport({
     service: 'hotmail',
+    port: 587,
     auth: {
         user: process.env.EMAIL_SERVICE_NAME,
         pass: process.env.EMAIL_SERVICE_PASS
