@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('newrelic');
 const bodyParser = require('body-parser');
 const express = require('express');
 const app = express();

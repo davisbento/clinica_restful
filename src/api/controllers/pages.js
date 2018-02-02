@@ -22,7 +22,6 @@ router.get('/pesquisa', function (req, res) {
 
 
 router.get('/localizarClinica', function (req, res) {
-    console.log('localizarCLinica')
     const search = [{ "cidade": req.query.cidade.toUpperCase() },
     { especialidades: req.query.especialidade.toLowerCase() }]
     clinicaModel.find({ $and: search }, function (err, clinica) {

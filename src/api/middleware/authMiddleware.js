@@ -15,8 +15,6 @@ module.exports = function(req, res, next){
         }
 
         const userId = decoded.sub;
-        console.log(userId)
-
         // check if a user exists
         user.findById(userId, (userErr, user) => {
             if (userErr || !user) {

@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 
 const agendamentoSchema = new mongoose.Schema({
-    exame: { type: String, uppercase: true  },
+    exame: { type: String },
     start: { type: String },
     end: { type: String },
-    title: { type: String, uppercase: true  },
+    title: { type: String, uppercase: true },
     convenio_id: mongoose.Schema.Types.ObjectId,
     status: { type: String, default: 'Agendado' },
     paciente_id: mongoose.Schema.Types.ObjectId,
@@ -21,7 +21,7 @@ const historicoSchema = new mongoose.Schema({
     ref_din_av_esq: { type: String },
     ref_est_esf_esq: { type: String },
     ref_est_cil_esq: { type: String },
-    ref_est_eixo_esq: { type: String },   
+    ref_est_eixo_esq: { type: String },
     ref_est_av_esq: { type: String },
     ref_din_esf_dir: { type: String },
     ref_din_cil_dir: { type: String },
@@ -29,7 +29,7 @@ const historicoSchema = new mongoose.Schema({
     ref_din_av_dir: { type: String },
     ref_est_esf_dir: { type: String },
     ref_est_cil_dir: { type: String },
-    ref_est_eixo_dir: { type: String },   
+    ref_est_eixo_dir: { type: String },
     ref_est_av_dir: { type: String },
     adicao: { type: String },
     data_consulta: { type: String }

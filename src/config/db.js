@@ -9,7 +9,7 @@ module.exports = mongoose.connect(mongoURL, { useMongoClient: true }, function (
         console.log("Erro ao conectar no mongodb: " + err);
     }
     else {
-        console.log("Conexão mongoDB efetuada com sucesso!", mongoURL);
+        console.log("Conexão mongoDB efetuada com sucesso!");
     }
 });
 
