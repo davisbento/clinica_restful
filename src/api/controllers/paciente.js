@@ -70,7 +70,7 @@ router.get('/listar/', checkAuth, function (req, res) {
             res.status(500).json({ "errors": err });
         }
         else if (!result) {
-            res.status(400).json({ message: "Nenhum paciente encontrado", success: false });
+            res.status(200).json({ data: [], success: true });
         }
         else {
             res.status(200).json({ data: result, success: true });
@@ -84,7 +84,7 @@ router.get('/listar/:id', checkAuth, function (req, res) {
             res.status(500).json({ "errors": err });
         }
         else if (!result) {
-            res.status(400).json({ message: "Nenhum paciente encontrado" });
+            res.status(200).json({ data: [], success: true });
         }
         else {
             res.status(200).json({ data: result, success: true });
@@ -116,9 +116,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
     var validationResult = validPacienteForm(req.body);
 
     if (!validationResult.success) {
-        return res.status(400).json({
-            errors: validationResult.errors
-        })
+        return res.status(400).json({ "errors": validationResult.errors, "success": false })
     }
 
     var start_date = moment(req.body.start).format();
@@ -191,7 +189,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
 
             paciente.save(function (err) {
                 if (err) {
-                    res.status(500).json({ "errors": "Erro ao salvar agendamento" });
+                    res.status(500).json({ "message": "Erro ao salvar agendamento" });
                 }
                 else {
                     res.status(200).json({ "message": "Agendamento criado com sucesso!", success: true });
@@ -261,7 +259,7 @@ router.put('/:id', function (req, res) {
 
             paciente.save(function (err) {
                 if (err) {
-                    res.status(500).json({ "errors": err });
+                    res.status(500).json({ "message": err });
                 }
                 else {
                     res.status(200).json({ "message": "Paciente alterado com sucesso!" });
@@ -274,7 +272,7 @@ router.put('/:id', function (req, res) {
 /*
     @params: start, end
 */
-router.put('/atualizarExame/:id', function (req, res) {
+router.put('/atualizarExame/:id', checkAuth, function (req, res) {
     var start_date = moment(req.body.start).format();
     var end_date = moment(req.body.end).format();
     pacienteModel.findOneAndUpdate(
@@ -292,10 +290,10 @@ router.put('/atualizarExame/:id', function (req, res) {
                 res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
             }
             else if (!result) {
-                res.status(400).json({ "errors": "Nenhum agendamento encontrado" });
+                res.status(500).json({ "message": "Nenhum agendamento encontrado" });
             }
             else {
-                res.status(200).json({ "message": "Agendamento atualizado com sucesso!" });
+                res.status(200).json({ data: { "message": "Agendamento atualizado com sucesso!" }, success: true });
             }
         }
     );
@@ -343,7 +341,6 @@ router.get('/listarExames/:clinica_id', checkAuth, function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                console.log(err)
                 res.json({ errors: err })
             }
             else {
@@ -391,7 +388,7 @@ router.get('/listarExamesMedico/:medico_id', checkAuth, function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                res.json(err)
+                res.status(500).json({ errors: err, success: false })
             }
             else {
                 res.json({ data: docs, success: true })
@@ -573,7 +570,7 @@ router.get('/summary/:clinica_id', checkAuth, function (req, res) {
     });
 });
 
-router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
+router.get('/listarPacienteExame/:agendamento_id', checkAuth ,function (req, res) {
     pacienteModel.findOne(
         { "agendamentos._id": req.params.agendamento_id },
         {
@@ -586,7 +583,7 @@ router.get('/listarPacienteExame/:agendamento_id', function (req, res) {
                 res.status(500).json({ err });
             }
             else if (!paciente) {
-                res.status(400).json({ message: "Nenhum paciente encontrado" });
+                res.status(500).json({ message: "Nenhum paciente encontrado" });
             }
             else {
                 res.json(paciente)
@@ -631,7 +628,7 @@ router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
                 res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
             }
             else if (!result) {
-                res.status(400).json({ "errors": "Nenhum agendamento encontrado" });
+                res.status(500).json({ "message": "Nenhum agendamento encontrado" });
             }
             else {
                 res.status(200).json(
@@ -679,10 +676,10 @@ router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
         },
         function (err, result) {
             if (err) {
-                res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
+                res.status(500).json({ "message": "Erro ao atualizar agendamento" });
             }
             else if (!result) {
-                res.status(400).json({ "errors": "Nenhum agendamento encontrado" });
+                res.status(500).json({ "message": "Nenhum agendamento encontrado" });
             }
             else {
                 res.status(200).json(
@@ -717,7 +714,7 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
 
                 paciente.save(function (err) {
                     if (err) {
-                        res.status(500).json({ "errors": "Erro ao salvar historico alterado" });
+                        res.status(500).json({ "message": "Erro ao salvar historico alterado" });
                     }
                     else {
                         res.status(200).json({ "message": "Histórico removido com sucesso!", "paciente": paciente })
