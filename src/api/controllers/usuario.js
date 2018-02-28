@@ -42,10 +42,10 @@ router.get('/list', checkAuth, function (req, res) {
             res.status(500).json({ err });
         }
         else if (result.length == 0) {
-            res.status(200).json({ message: "Nenhum usuário cadastrado" });
+            res.status(200).json({ message: "Nenhum usuário cadastrado", success: true });
         }
         else {
-            res.status(200).json(result);
+            res.status(200).json({ data: result, success: true });
         }
     });
 
@@ -91,7 +91,7 @@ router.get('/list/:id', checkAuth, function (req, res) {
                 res.status(400).json({ message: "Nenhum usuário encontrado" });
             }
             else {
-                res.status(200).json(result);
+                res.status(200).json({ data: result, success: true });
             }
         });
 });

@@ -4,8 +4,6 @@ var clinicaController = require('../api/controllers/clinica')
 var authController = require('../api/controllers/auth');
 var pagesController = require('../api/controllers/pages');
 
-
-
 module.exports = function(server){
     server.use('/api/usuario', usuarioController);
     server.use('/api/paciente', pacienteController);

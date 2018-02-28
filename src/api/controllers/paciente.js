@@ -7,7 +7,7 @@ const clinicaModel = require('../models/clinica');
 const checkAuth = require('../middleware/authMiddleware');
 const mongoose = require('mongoose');
 const fs = require('fs');
-const util = require('util')
+const util = require('util');
 
 function validForm(payload) {
     var errors = {};
@@ -64,21 +64,21 @@ function validPacienteForm(payload) {
     }
 }
 
-router.get('/listar/', function (req, res) {
+router.get('/listar/', checkAuth, function (req, res) {
     pacienteModel.find({}, function (err, result) {
         if (err) {
             res.status(500).json({ "errors": err });
         }
         else if (!result) {
-            res.status(400).json({ message: "Nenhum paciente encontrado" });
+            res.status(400).json({ message: "Nenhum paciente encontrado", success: false });
         }
         else {
-            res.status(200).json(result);
+            res.status(200).json({ data: result, success: true });
         }
     });
 });
 
-router.get('/listar/:id', function (req, res) {
+router.get('/listar/:id', checkAuth, function (req, res) {
     pacienteModel.findById(req.params.id, function (err, result) {
         if (err) {
             res.status(500).json({ "errors": err });
@@ -87,12 +87,12 @@ router.get('/listar/:id', function (req, res) {
             res.status(400).json({ message: "Nenhum paciente encontrado" });
         }
         else {
-            res.status(200).json(result);
+            res.status(200).json({ data: result, success: true });
         }
     });
 });
 
-router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
+router.get('/listarPacienteClinica/:clinica_id', checkAuth, function (req, res) {
     pacienteModel.find(
         { "clinica_id": req.params.clinica_id },
         { "agendamentos": 0, "historico": 0 },
@@ -101,10 +101,10 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
                 res.status(500).json({ err });
             }
             else if (result.length == 0) {
-                res.status(200).json([]);
+                res.status(200).json({ data: [], success: true });
             }
             else {
-                res.status(200).json(result);
+                res.status(200).json({ data: result, success: true });
             }
         });
 });
@@ -112,7 +112,7 @@ router.get('/listarPacienteClinica/:clinica_id', function (req, res) {
 /*
     @params: nome_paciente, nome_exame, cpf, start, data_nascimento
 */
-router.post('/agendarExame/:clinica_id', function (req, res) {
+router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
     var validationResult = validPacienteForm(req.body);
 
     if (!validationResult.success) {
@@ -160,7 +160,7 @@ router.post('/agendarExame/:clinica_id', function (req, res) {
 
                     p.save();
 
-                    res.status(200).json({ "message": "Paciente e agendamento criado com sucesso!" });
+                    res.status(200).json({ "message": "Paciente e agendamento criado com sucesso!", success: true });
 
 
                 }
@@ -194,7 +194,7 @@ router.post('/agendarExame/:clinica_id', function (req, res) {
                     res.status(500).json({ "errors": "Erro ao salvar agendamento" });
                 }
                 else {
-                    res.status(200).json({ "message": "agendamento criado com sucesso!" });
+                    res.status(200).json({ "message": "Agendamento criado com sucesso!", success: true });
                 }
             });
         }
@@ -212,7 +212,6 @@ router.delete('/:id', function (req, res) {
         }
     });
 })
-
 
 router.put('/:id', function (req, res) {
     const validationResult = validPacienteForm(req.body);
@@ -305,9 +304,11 @@ router.put('/atualizarExame/:id', function (req, res) {
 /*
     @params: ?nome_exame=String
 */
-router.get('/listarExames/:clinica_id', function (req, res) {
-    const rules = [{ "agendamentos.exame": req.query.nome_exame },
-    { "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id) }]
+router.get('/listarExames/:clinica_id', checkAuth, function (req, res) {
+    const rules = [
+        { "agendamentos.exame": req.query.nome_exame },
+        { "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id) }
+    ]
 
     pacienteModel.aggregate(
         [
@@ -342,15 +343,16 @@ router.get('/listarExames/:clinica_id', function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                res.json(err)
+                console.log(err)
+                res.json({ errors: err })
             }
             else {
-                res.json(docs)
+                res.json({ data: docs, success: true })
             }
         });
 });
 
-router.get('/listarExamesMedico/:medico_id', function (req, res) {
+router.get('/listarExamesMedico/:medico_id', checkAuth, function (req, res) {
     const medico_id = mongoose.Types.ObjectId(req.params.medico_id)
 
     const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "agendamentos.medico_id": medico_id }]
@@ -392,7 +394,7 @@ router.get('/listarExamesMedico/:medico_id', function (req, res) {
                 res.json(err)
             }
             else {
-                res.json(docs)
+                res.json({ data: docs, success: true })
             }
         });
 })
@@ -419,7 +421,7 @@ router.get('/pesquisarPaciente/:clinica_id/:busca', function (req, res) {
             // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
             const pacienteFiltrado = pacientes.filter(filtroLike)
 
-            res.status(200).json(pacienteFiltrado);
+            res.status(200).json({ data: pacienteFiltrado, success: true });
         }
     });
 })
@@ -448,10 +450,10 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
                 res.status(500).json({ err });
             }
             else if (paciente.length > 0) {
-                res.status(200).json(paciente)
+                res.status(200).json({ data: paciente, success: true })
             }
             else {
-                res.status(200).json([])
+                res.status(200).json({ data: [], success: true })
             }
         });
 });
@@ -491,7 +493,7 @@ router.get('/listarProximosPacientes/:medico_id/:nome', function (req, res) {
 
                 const pacienteFiltrado = paciente.filter(filtroLike)
 
-                res.status(200).json(pacienteFiltrado)
+                res.status(200).json({ data: pacienteFiltrado, success: true })
             }
             else {
                 res.status(200).json([])
@@ -499,14 +501,12 @@ router.get('/listarProximosPacientes/:medico_id/:nome', function (req, res) {
         });
 });
 
-router.post('/', function (req, res) {
+router.post('/:clinica_id', function (req, res) {
 
     const validationResult = validPacienteForm(req.body);
 
     if (!validationResult.success) {
-        return res.status(400).json({
-            errors: validationResult.errors
-        })
+        return res.status(400).json({ errors: validationResult.errors })
     }
 
     var p = new pacienteModel();
@@ -525,6 +525,7 @@ router.post('/', function (req, res) {
     p.rua = req.body.rua || '';
     p.bairro = req.body.bairro || '';
     p.cidade = req.body.cidade || '';
+    p.clinica = req.params.clinica_id;
     p.UF = req.body.UF || '';
 
     p.save(function (err) {
@@ -534,13 +535,13 @@ router.post('/', function (req, res) {
             res.status(500).json(errors);
         }
         else {
-            res.status(200).json({ "message": "Usuário criado com sucesso!" });
+            res.status(200).json({ "message": "Usuário criado com sucesso!", success: true });
         }
     })
 
 });
 
-router.get('/summary/:clinica_id', function (req, res) {
+router.get('/summary/:clinica_id', checkAuth, function (req, res) {
     const clinica_id = mongoose.Types.ObjectId(req.params.clinica_id);
     let counter = {};
     pacienteModel.aggregate([
@@ -557,16 +558,16 @@ router.get('/summary/:clinica_id', function (req, res) {
         }
     ], function (err, docs) {
         if (err) {
-            res.send(err)
+            res.status(500).json(err)
         }
         else if (docs.length == 0) {
-            res.status(200).json([])
+            res.status(200).json({ data: [], success: true })
         }
         else {
             counter["agendamentos"] = docs[0].count;
             pacienteModel.count({}, function (err, dados) {
                 counter["pacientes"] = dados;
-                res.json(counter);
+                res.json({ data: counter, success: true });
             });
         }
     });
@@ -642,8 +643,6 @@ router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
         }
     );
 });
-
-
 
 router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
     const id = mongoose.Types.ObjectId();
@@ -729,7 +728,7 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
 
 });
 
-router.get('/contagemPorConvenio/:clinica_id', function (req, res) {
+router.get('/contagemPorConvenio/:clinica_id', checkAuth, function (req, res) {
     pacienteModel.aggregate(
         [
             // Match the document containing the array element
@@ -751,8 +750,8 @@ router.get('/contagemPorConvenio/:clinica_id', function (req, res) {
             if (err) {
                 res.json(err)
             }
-            else if(result.length == 0) {
-                res.status(200).json([])
+            else if (result.length == 0) {
+                res.status(200).json({ data: [], success: true })
             }
             else {
                 clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
@@ -772,12 +771,11 @@ router.get('/contagemPorConvenio/:clinica_id', function (req, res) {
                             }
                         }
 
-                        res.status(200).json(resultado)
+                        res.status(200).json({ data: resultado, success: true })
                     }
                 })
             }
         });
 })
-
 
 module.exports = router

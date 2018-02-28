@@ -7,7 +7,6 @@ const clinicaModel = require('../models/clinica');
 const checkAuth = require('../middleware/authMiddleware');
 const mongoose = require('mongoose');
 
-
 router.get('/', function (req, res) {
     res.render('home/home')
 })
@@ -19,7 +18,6 @@ router.get('/home', function (req, res) {
 router.get('/pesquisa', function (req, res) {
     res.render('home/pesquisa')
 })
-
 
 router.get('/localizarClinica', function (req, res) {
     const search = [{ "cidade": req.query.cidade.toUpperCase() },
@@ -53,6 +51,5 @@ router.get('/confirm_account', function (req, res) {
     });
 
 });
-
 
 module.exports = router;
