@@ -570,7 +570,7 @@ router.get('/summary/:clinica_id', checkAuth, function (req, res) {
     });
 });
 
-router.get('/listarPacienteExame/:agendamento_id', checkAuth ,function (req, res) {
+router.get('/listarPacienteExame/:agendamento_id', checkAuth, function (req, res) {
     pacienteModel.findOne(
         { "agendamentos._id": req.params.agendamento_id },
         {
@@ -586,7 +586,7 @@ router.get('/listarPacienteExame/:agendamento_id', checkAuth ,function (req, res
                 res.status(500).json({ message: "Nenhum paciente encontrado" });
             }
             else {
-                res.json(paciente)
+                res.json({ data: paciente, success: true })
             }
         });
 });
