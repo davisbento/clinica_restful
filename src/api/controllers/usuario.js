@@ -136,17 +136,17 @@ router.delete('/:id', function (req, res) {
     });
 });
 
-router.get('/listarMedicos/:clinica_id', function (req, res) {
+router.get('/listarMedicos/:clinica_id', checkAuth, function (req, res) {
     const criteria = [{ "clinica_id": req.params.clinica_id }, { "cargo": "Medico" }]
 
     usuarioModel.find({ $and: criteria },
         { "_id": 1, "nome": 1, "clinica_id": 1, "email": 1, "cargo": 1 },
         function (err, medicos) {
             if (err) {
-                res.status(500).json({ err });
+                res.status(500).json({ "message": "Erro ao localizar médico" + err });
             }
             else {
-                res.status(200).json(medicos)
+                res.status(200).json({ data: medicos, success: true })
             }
         });
 });
@@ -155,7 +155,7 @@ router.get('/listarUsuarios/:clinica_id', checkAuth, function (req, res) {
 
     usuarioModel.find(
         { "clinica_id": req.params.clinica_id },
-        { "_id": 1, "nome": 1, "clinica_id": 1, "email": 1, "cargo": 1, "username": 1, "admin": 1 },
+        { "token": 0, "password": 0},
         function (err, usuarios) {
             if (err) {
                 res.status(500).json({ "message": "Erro: " + err })
@@ -170,18 +170,33 @@ router.get('/listarUsuarios/:clinica_id', checkAuth, function (req, res) {
 
 });
 
-router.put('/changeAdmin/:usuario_id', function (req, res) {
+router.put('/changeAdmin/:usuario_id', checkAuth, function (req, res) {
     usuarioModel.findOneAndUpdate(
         { "_id": req.params.usuario_id },
         { $set: { "admin": req.body.isAdmin } },
         function (err, usuario) {
             if (err) {
-                res.status(500).json({ "errors": "Erro: " + err })
+                res.status(500).json({ "message": "Erro: " + err })
             }
             else {
-                res.status(200).json({ message: "Usuário alterado com sucesso!" })
+                res.status(200).json({success: true, message: "Usuário alterado com sucesso!" })
             }
         })
+});
+
+router.put('/changeAtivo/:usuario_id', function (req, res) {
+    usuarioModel.findOneAndUpdate(
+        { "_id": req.params.usuario_id },
+        { $set: { "ativo": req.body.isAtivo } },
+        function (err, usuario) {
+            if (err) {
+                res.status(500).json({ "message": "Erro: " + err })
+            }
+            else {
+                res.status(200).json({ message: "Usuário alterado com sucesso!", success: true })
+            }
+        }
+    )
 });
 
 

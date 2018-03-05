@@ -10,6 +10,7 @@ const clinicaSchema = new mongoose.Schema({
     nome: { type: String, uppercase: true },
     cidade: { type: String, uppercase: true },
     endereco: { type: String, uppercase: true },
+    ativo: { type: Boolean, default: true},
     telefone: { type: String },
     especialidades: [],
     convenios: [convenioSchema]

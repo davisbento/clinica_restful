@@ -8,6 +8,7 @@ const usuarioSchema = mongoose.Schema({
     email_confirm: { type: Boolean, default: false },
     password: { type: String, required: true },
     data_cad: { type: Date, default: Date.now },
+    ativo: { type: Boolean, default: true },
     cargo: { type: String },
     admin: { type: Boolean, default: false },
     clinica_id: { type: mongoose.Schema.Types.ObjectId },

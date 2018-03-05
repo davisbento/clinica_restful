@@ -154,7 +154,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
                         medico_id: req.body.medico_id
                     };
 
-                    p.agendamentos.push(agendamento);
+                    p.agendamentos = [...p.agendamentos, agendamento];
 
                     p.save();
 
@@ -185,7 +185,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
 
             paciente.data_nascimento = moment(data_nascimento).format() || '';
 
-            paciente.agendamentos.push(agendamento);
+            paciente.agendamentos = [...paciente.agendamentos, agendamento];
 
             paciente.save(function (err) {
                 if (err) {

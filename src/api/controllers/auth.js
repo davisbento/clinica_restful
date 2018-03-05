@@ -91,41 +91,45 @@ router.post('/signup', function (req, res) {
             clinica.endereco = '';
             clinica.telefone = '';
 
-            clinica.save(function (err) {
+            var usuario = new usuarioModel();
+
+            usuario.nome = req.body.nome;
+            usuario.email = req.body.email;
+            usuario.password = usuario.generateHash(req.body.password);
+            usuario.token = usuario.generateHash(Date.now());
+            usuario.cargo = req.body.cargo;
+            usuario.clinica_id = clinica._id;
+            usuario.email_confirm = true;
+            usuario.admin = true;
+
+            // const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
+
+            usuario.save(function (err) {
                 if (err) {
-                    res.status(500).json({ message: "Erro ao criar clinica" + err });
+                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
                 }
                 else {
-                    var usuario = new usuarioModel();
-
-                    usuario.nome = req.body.nome;
-                    usuario.email = req.body.email;
-                    usuario.password = usuario.generateHash(req.body.password);
-                    usuario.token = usuario.generateHash(Date.now());
-                    usuario.cargo = req.body.cargo;
-                    usuario.clinica_id = clinica._id;
-                    usuario.email_confirm = false;
-                    usuario.admin = true;
-
-                    const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
-
-                    emailService.signupEmail(usuario, link, function (result) {
-                        if (!result) {
-                            res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
-                        }
-                        else {
-                            usuario.save(function (err) {
-                                if (err) {
-                                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
-                                }
-                                else {
-                                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
-                                }
-                            });
-                        }
-                    });
+                    clinica.save()
+                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
                 }
             });
+
+            // emailService.signupEmail(usuario, link, function (result) {
+            //     if (!result) {
+            //         res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
+            //     }
+            //     else {
+            //         usuario.save(function (err) {
+            //             if (err) {
+            //                 res.status(500).json({ message: "Erro ao salvar usuário" + err });
+            //             }
+            //             else {
+            //                 clinica.save()
+            //                 res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+            //             }
+            //         });
+            //     }
+            // });
         }
     })
 });
@@ -139,7 +143,7 @@ router.post('/authenticate', function (req, res) {
 
     const usuario = new usuarioModel();
 
-    usuarioModel.findOne(criteria, function (err, user) {
+    usuarioModel.findOne({ $and: [criteria, { "ativo": true }] }, function (err, user) {
         let errors = {};
         if (err) {
             res.status(500).json({ err });

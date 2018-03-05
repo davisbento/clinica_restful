@@ -18,6 +18,7 @@ router.get('/listar/:clinica_id', function (req, res) {
 });
 
 router.put('/atualizarClinica/:clinica_id', function (req, res) {
+    console.log(req.body)
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
             res.status(500).json({ "errors": "Erro ao localizar a clinica" })
@@ -34,13 +35,11 @@ router.put('/atualizarClinica/:clinica_id', function (req, res) {
                 // limpa o array para receber um novo
                 clinica.especialidades = [];
                 // percorre o array e insere cada um no banco  
-                for (reg in req.body.especialidades) {
-                    clinica.especialidades.push(req.body.especialidades[reg].toLowerCase());
-                }
+               clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
             }
             else {
                 // se não for vazio o array, insere vazio
-                clinica.especialidades = req.body.especialidades;
+                clinica.especialidades = [];
             }
 
             clinica.save(function (err) {
@@ -69,13 +68,7 @@ router.post('/cadastrarConvenio/:clinica_id', function (req, res) {
                 medico_id: req.body.medico_id
             };
 
-            // const index = clinica.convenios.findIndex(e => e.nome = convenios.nome)
-
-            // if (index > 0) {
-            //     clinica.convenios.push(convenios);
-            // }
-
-            clinica.convenios.push(convenios);
+            clinica.convenios = [...clinica.convenios, convenios];
 
             clinica.save(function (err) {
                 if (err) {
@@ -122,23 +115,6 @@ router.get('/listarConveniosClinica/:clinica_id', function (req, res) {
         else {
             const convenios = clinica.convenios.map(e => e.nome)
             res.json(convenios)
-        }
-    })
-})
-
-router.get('/localizarClinica', function (req, res) {
-    const search = [{ "cidade": req.query.cidade.toUpperCase() }]
-
-    if (req.query.especialidade !== '') {
-        search.push({ especialidades: req.query.especialidade })
-    }
-
-    clinicaModel.find({ $and: search }, function (err, clinica) {
-        if (err) {
-            res.status(500).json(err)
-        }
-        else {
-            res.status(200).json(clinica)
         }
     })
 })

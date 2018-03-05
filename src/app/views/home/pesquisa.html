@@ -3,7 +3,7 @@
 
 {% block content %}
 
-    <div class='search-result'>
+    <div class='main-content'>
           <h1>Pesquisa de Clinica</h1>
           <div class='form-group'>
               <label>Cidade:</label>
@@ -37,7 +37,6 @@
             especialidade: $('#especialidade').val() || ''
             },
              success: function(data, textStatus) {
-               console.log(data)
                $( "#resultados" ).html('');
                if(data.length > 0) {
                 for(reg in data) {
@@ -47,7 +46,7 @@
                   const telefone = `<td>${data[reg].telefone}</td>`
                   const clinica_id = `
                       <td>
-                        <a href="/clinica/${data[reg]._id}">
+                        <a href="/detalhe/${data[reg]._id}">
                           <i class='fa fa-eye'></i>
                         </a>
                       </td>`

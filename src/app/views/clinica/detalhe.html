@@ -1,0 +1,18 @@
+{% extends "../layout.html" %}
+
+
+{% block content %}
+    <div class="main-content">
+        <div class="detalhe-section">
+            <p class="font-big">{{ clinica.nome }}<p> 
+                <span>Endereço da Clinica: {{ clinica.cidade }}  {{ clinica.endereco }}</span>
+                <hr />
+                <span>Especialidades:</span>
+                <ul class="list-unstyled">
+                    {% for reg in clinica.especialidades %}
+                        <li class="uppercase">{{ reg }}</li>
+                    {% endfor %}
+                </ul>
+        </div>       
+    </div>     
+{% endblock %}
