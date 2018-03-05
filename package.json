@@ -8,7 +8,7 @@
     "dev": "nodemon -e js,html,css",
     "prod": "pm2 start src/loader.js --name clinica_restful",
     "starte": "nodemon src/loader.js",
-    "start": "pm2 start src/loader.js --attach"
+    "start": "pm2 start src/loader.js"
   },
   "engines": {
     "node": "8.9.4",
