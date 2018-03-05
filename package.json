@@ -35,7 +35,7 @@
     "node-restful": "0.2.5",
     "nodemailer": "4.0.1",
     "nunjucks": "3.0.1",
-    "pm2": "2.1.5",
+    "pm2": "^2.1.5",
     "pug": "2.0.0-rc.2",
     "socket.io": "2.0.3"
   },
