@@ -203,7 +203,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
 router.delete('/:id', function (req, res) {
     pacienteModel.findByIdAndRemove(req.params.id, function (err, result) {
         if (err) {
-            res.status(500).json({ err });
+            res.status(500).json({ "message": err.message });
         }
         else {
             res.status(200).json({ message: "Usuario removido com sucesso!" });
@@ -223,10 +223,10 @@ router.put('/:id', function (req, res) {
     pacienteModel.findById(req.params.id, function (err, paciente) {
         if (err) {
             err["form"] = "Erro ao atualizar paciente"
-            res.status(500).json({ "errors": err["form"] });
+            res.status(500).json({ "message": err["form"] });
         }
         else if (!paciente) {
-            res.status(400).json({ "error": "Erro ao localizar paciente" });
+            res.status(500).json({ "message": "Erro ao localizar paciente" });
         }
         else {
             // VERIFICA SE O A DATA DE NASCIMENTO JÁ ESTÁ FORMATADA  
@@ -259,7 +259,7 @@ router.put('/:id', function (req, res) {
 
             paciente.save(function (err) {
                 if (err) {
-                    res.status(500).json({ "message": err });
+                    res.status(500).json({ "message": err.message });
                 }
                 else {
                     res.status(200).json({ "message": "Paciente alterado com sucesso!" });
@@ -287,7 +287,7 @@ router.put('/atualizarExame/:id', checkAuth, function (req, res) {
         },
         function (err, result) {
             if (err) {
-                res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
+                res.status(500).json({ "message": "Erro ao atualizar agendamento" });
             }
             else if (!result) {
                 res.status(500).json({ "message": "Nenhum agendamento encontrado" });
@@ -341,7 +341,7 @@ router.get('/listarExames/:clinica_id', checkAuth, function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                res.json({ errors: err })
+                res.json({ "message": err.message })
             }
             else {
                 res.json({ data: docs, success: true })
@@ -388,7 +388,7 @@ router.get('/listarExamesMedico/:medico_id', checkAuth, function (req, res) {
         ],
         function (err, docs) {
             if (err) {
-                res.status(500).json({ errors: err, success: false })
+                res.status(500).json({ "message": err.message })
             }
             else {
                 res.json({ data: docs, success: true })
@@ -444,7 +444,7 @@ router.get('/listarProximosPacientes/:medico_id', function (req, res) {
         { sort: { "agendamentos.start": 1 } },
         function (err, paciente) {
             if (err) {
-                res.status(500).json({ err });
+                res.status(500).json({ "message": err.message });
             }
             else if (paciente.length > 0) {
                 res.status(200).json({ data: paciente, success: true })
@@ -528,8 +528,8 @@ router.post('/:clinica_id', function (req, res) {
     p.save(function (err) {
         if (err) {
             const errors = {}
-            errors["form"] = err
-            res.status(500).json(errors);
+            errors["form"] = err.message
+            res.status(500).json({ "message": errors });
         }
         else {
             res.status(200).json({ "message": "Usuário criado com sucesso!", success: true });
@@ -555,7 +555,7 @@ router.get('/summary/:clinica_id', checkAuth, function (req, res) {
         }
     ], function (err, docs) {
         if (err) {
-            res.status(500).json(err)
+            res.status(500).json({ message: err.message })
         }
         else if (docs.length == 0) {
             res.status(200).json({ data: [], success: true })
@@ -580,10 +580,10 @@ router.get('/listarPacienteExame/:agendamento_id', checkAuth, function (req, res
         },
         function (err, paciente) {
             if (err) {
-                res.status(500).json({ err });
+                res.status(500).json({ "message": err.message });
             }
             else if (!paciente) {
-                res.status(500).json({ message: "Nenhum paciente encontrado" });
+                res.status(500).json({ "message": "Nenhum paciente encontrado" });
             }
             else {
                 res.json({ data: paciente, success: true })
@@ -591,7 +591,7 @@ router.get('/listarPacienteExame/:agendamento_id', checkAuth, function (req, res
         });
 });
 
-router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
+router.post('/salvarImagemAtendimento/:historico_id', checkAuth, (req, res) => {
     const id = req.params.historico_id;
 
     const url_imagem = id + '_atendimentoscan.jpeg';
@@ -608,16 +608,16 @@ router.post('/salvarImagemAtendimento/:historico_id', (req, res) => {
                 { $set: { "historico.$.url_imagem": url_imagem } },
                 function (err, result) {
                     if (err) {
-                        res.status(500).json({ "errors": err })
+                        res.status(500).json({ "message": err.message })
                     }
                     else {
-                        res.status(200).json({ "message": "Imagem salva com sucesso!" })
+                        res.status(200).json({ "message": "Imagem salva com sucesso!", success: true })
                     }
                 })
         });
 })
 
-router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
+router.post('/alterarAgendamento/:agendamento_id', checkAuth, function (req, res) {
     pacienteModel.findOneAndUpdate(
         { "agendamentos._id": req.params.agendamento_id },
         {
@@ -625,7 +625,7 @@ router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
         },
         function (err, result) {
             if (err) {
-                res.status(500).json({ "errors": "Erro ao atualizar agendamento" });
+                res.status(500).json({ "message": "Erro ao atualizar agendamento" });
             }
             else if (!result) {
                 res.status(500).json({ "message": "Nenhum agendamento encontrado" });
@@ -633,7 +633,8 @@ router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
             else {
                 res.status(200).json(
                     {
-                        "message": "Atendimento atualizado com sucesso!"
+                        "message": "Atendimento atualizado com sucesso!",
+                        success: true
                     }
                 );
             }
@@ -641,7 +642,7 @@ router.post('/alterarAgendamento/:agendamento_id', function (req, res) {
     );
 });
 
-router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
+router.post('/finalizarAtendimento/:agendamento_id', checkAuth, function (req, res) {
     const id = mongoose.Types.ObjectId();
 
     const historico = {
@@ -685,7 +686,8 @@ router.post('/finalizarAtendimento/:agendamento_id', function (req, res) {
                 res.status(200).json(
                     {
                         "message": "Atendimento finalizado com sucesso!",
-                        historico_id: id
+                        historico_id: id,
+                        success: true
                     }
                 );
             }
@@ -717,7 +719,7 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
                         res.status(500).json({ "message": "Erro ao salvar historico alterado" });
                     }
                     else {
-                        res.status(200).json({ "message": "Histórico removido com sucesso!", "paciente": paciente })
+                        res.status(200).json({ "message": "Histórico removido com sucesso!", "paciente": paciente, success: true })
                     }
                 })
             }
@@ -753,7 +755,7 @@ router.get('/contagemPorConvenio/:clinica_id', checkAuth, function (req, res) {
             else {
                 clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
                     if (err) {
-                        res.status(500).json(err)
+                        res.status(500).json({ "message": err.message })
                     }
                     else {
                         const resultado = []

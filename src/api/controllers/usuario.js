@@ -155,7 +155,7 @@ router.get('/listarUsuarios/:clinica_id', checkAuth, function (req, res) {
 
     usuarioModel.find(
         { "clinica_id": req.params.clinica_id },
-        { "token": 0, "password": 0},
+        { "token": 0, "password": 0 },
         function (err, usuarios) {
             if (err) {
                 res.status(500).json({ "message": "Erro: " + err })
@@ -179,7 +179,7 @@ router.put('/changeAdmin/:usuario_id', checkAuth, function (req, res) {
                 res.status(500).json({ "message": "Erro: " + err })
             }
             else {
-                res.status(200).json({success: true, message: "Usuário alterado com sucesso!" })
+                res.status(200).json({ success: true, message: "Usuário alterado com sucesso!" })
             }
         })
 });
@@ -223,7 +223,7 @@ router.get('/pesquisarUsuario/:clinica_id/:busca', function (req, res) {
             // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
             const usuarioFiltrado = usuarios.filter(filtroLike)
 
-            res.status(200).json(usuarioFiltrado);
+            res.status(200).json({ data: usuarioFiltrado, success: true });
         }
     })
 })
