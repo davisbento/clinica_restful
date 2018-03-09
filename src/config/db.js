@@ -4,7 +4,7 @@ const devURL = 'mongodb://localhost/clinica_restful'
 const mongoURL = process.env.NODE_ENV !== 'production' ? devURL : prodURL
 
 mongoose.Promise = global.Promise
-module.exports = mongoose.connect(mongoURL, { useMongoClient: true }, function (err) {
+module.exports = mongoose.connect(mongoURL, function (err) {
     if (err) {
         console.log("Erro ao conectar no mongodb: " + err);
     }

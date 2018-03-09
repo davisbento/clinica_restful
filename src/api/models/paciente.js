@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const agendamentoSchema = new mongoose.Schema({
     exame: { type: String },
     start: { type: String },

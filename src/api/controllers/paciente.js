@@ -727,6 +727,57 @@ router.delete('/removerHistorico/:historico_id', function (req, res) {
 
 });
 
+router.get('/contagemPorConvenioMes/:clinica_id', checkAuth, function (req, res) {
+    pacienteModel.aggregate(
+        [
+            // Match the document containing the array element
+            { "$match": { "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id) } },
+
+            // Unwind to "de-normalize" the array content
+            { "$unwind": "$agendamentos" },
+
+            // Group back and just return the fields you want
+            {
+                $group: {
+                    _id: { id: "$agendamentos.convenio_id", month: "$agendamentos.start" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $project: { _id: 0, _id: "$_id.id", "mes": { $substr: ["$_id.month", 5, 2] }, count: "$count" } },
+        ],
+        function (err, result) {
+            if (err) {
+                res.json(err)
+            }
+            else if (result.length == 0) {
+                res.status(200).json({ data: [], success: true })
+            }
+            else {
+                // res.status(200).json({ data: result, success: true })
+                clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
+                    if (err) {
+                        res.status(500).json({ "message": err.message })
+                    }
+                    else {
+                        const resultado = []
+                        for (i = 0; i < result.length; i++) {
+                            for (j = 0; j < clinica.convenios.length; j++) {
+                                if (result[i]._id.toString() == clinica.convenios[j]._id.toString()) {
+                                    const value = Number(clinica.convenios[j].valor) * Number(result[i].count)
+                                    const name = result[i].mes
+                                    const obj = { value, name }
+                                    resultado.push(obj)
+                                }
+                            }
+                        }
+
+                        res.status(200).json({ data: resultado, success: true })
+                    }
+                })
+            }
+        });
+})
+
 router.get('/contagemPorConvenio/:clinica_id', checkAuth, function (req, res) {
     pacienteModel.aggregate(
         [
@@ -753,6 +804,7 @@ router.get('/contagemPorConvenio/:clinica_id', checkAuth, function (req, res) {
                 res.status(200).json({ data: [], success: true })
             }
             else {
+                // res.status(200).json({ data: result, success: true })
                 clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
                     if (err) {
                         res.status(500).json({ "message": err.message })

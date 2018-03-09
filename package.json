@@ -1,6 +1,6 @@
 {
   "name": "clinica",
-  "version": "1.0.0",
+  "version": "8.10.0",
   "description": "",
   "main": "src/loader.js",
   "scripts": {
@@ -10,8 +10,8 @@
     "startee": "PORT=3000 pm2 start src/loader.js"
   },
   "engines": {
-    "node": "8.9.4",
-    "npm": "5.2.0"
+    "node": "8.10.0",
+    "npm": "5.6.0"
   },
   "keywords": [],
   "author": "",
@@ -28,10 +28,9 @@
     "jsonwebtoken": "7.4.1",
     "lodash": "4.17.4",
     "moment": "2.19.3",
-    "mongoose": "4.13.0",
+    "mongoose": "^5.0.9",
     "mongoose-paginate": "5.0.3",
     "morgan": "1.9.0",
-    "node-restful": "0.2.5",
     "nodemailer": "4.0.1",
     "nunjucks": "3.0.1",
     "pm2": "^2.1.5",
