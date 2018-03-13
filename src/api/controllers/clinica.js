@@ -6,6 +6,7 @@ const clinicaModel = require('../models/clinica');
 const usuarioModel = require('../models/usuario');
 const emailService = require('../services/emailService');
 const checkAuth = require('../middleware/authMiddleware');
+const fs = require('fs');
 
 router.get('/listar/:clinica_id', checkAuth, function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
@@ -18,41 +19,58 @@ router.get('/listar/:clinica_id', checkAuth, function (req, res) {
     })
 });
 
-router.put('/atualizarClinica/:clinica_id', checkAuth, function (req, res) {
-    console.log(req.body)
-    clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
+router.put('/atualizarClinica/:clinica_id', function (req, res) {
+    var date = new Date();
+    var time_stamp = date.getTime();
+
+    var url_imagem = time_stamp + '.jpg';
+
+    var path_origem = req.body.imgs[0].preview;
+    var path_destino = '../uploads/' + url_imagem;
+
+    console.log(path_origem)
+
+    fs.rename(path_origem, path_destino, function (err) {
         if (err) {
-            res.status(500).json({ "message": "Erro ao localizar a clinica" });
+            res.status(500).json({ message: err.message });
+            return;
         }
-        else {
 
-            clinica.nome = req.body.nome;
-            clinica.cidade = req.body.cidade;
-            clinica.endereco = req.body.endereco;
-            clinica.telefone = req.body.telefone;
-
-
-            if (req.body.especialidades.length > 0) {
-                // limpa o array para receber um novo
-                clinica.especialidades = [];
-                // percorre o array e insere cada um no banco  
-                clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
+        clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
+            if (err) {
+                res.status(500).json({ "message": "Erro ao localizar a clinica" });
             }
             else {
-                // se o array estiver vazio, zera o array atual
-                clinica.especialidades = [];
-            }
 
-            clinica.save(function (err) {
-                if (err) {
-                    res.status(500).json({ "message": err.message });
+                clinica.nome = req.body.nome;
+                clinica.cidade = req.body.cidade;
+                clinica.endereco = req.body.endereco;
+                clinica.telefone = req.body.telefone;
+                clinica.imgs = [...clinica.imgs, url_imagem]
+
+
+                if (req.body.especialidades.length > 0) {
+                    // limpa o array para receber um novo
+                    clinica.especialidades = [];
+                    // percorre o array e insere cada um no banco  
+                    clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
                 }
                 else {
-                    res.status(200).json({ "message": "Clinica alterada com sucesso!", success: true });
+                    // se o array estiver vazio, zera o array atual
+                    clinica.especialidades = [];
                 }
-            })
-        }
 
+                clinica.save(function (err) {
+                    if (err) {
+                        res.status(500).json({ "message": err.message });
+                    }
+                    else {
+                        res.status(200).json({ "message": "Clinica alterada com sucesso!", success: true });
+                    }
+                })
+            }
+
+        })
     })
 
 })

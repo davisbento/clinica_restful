@@ -13,6 +13,7 @@ const clinicaSchema = new mongoose.Schema({
     ativo: { type: Boolean, default: true },
     telefone: { type: String },
     especialidades: [],
+    imgs: [],
     convenios: [convenioSchema]
 });
 

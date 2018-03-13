@@ -90,6 +90,7 @@ router.post('/signup', function (req, res) {
             clinica.cidade = req.body.cidade;
             clinica.endereco = '';
             clinica.telefone = '';
+            clinica.imgs = [];
 
             var usuario = new usuarioModel();
 

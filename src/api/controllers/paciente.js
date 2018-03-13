@@ -119,9 +119,9 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
         return res.status(400).json({ "errors": validationResult.errors, "success": false })
     }
 
-    var start_date = moment(req.body.start).format();
+    let start_date = moment(req.body.start).format();
     // ADICIONA 30MIN A DATA INICIAL
-    var end_date = moment(start_date).add(30, 'm');
+    let end_date = moment(start_date).add(30, 'm');
     end_date = moment(end_date).format();
 
     pacienteModel.findOne({ 'cpf': req.body.cpf }, function (err, paciente) {
@@ -129,9 +129,9 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
             res.status(500).json({ "errors": err });
         }
         else if (!paciente) {
-            var p = new pacienteModel();
-            var dn = req.body.data_nascimento.split("/").reverse().join("-");
-            var data_nascimento = dn + 'T00:00:00';
+            let p = new pacienteModel();
+            let dn = req.body.data_nascimento.split("/").reverse().join("-");
+            let data_nascimento = dn + 'T00:00:00';
 
             p.nome = req.body.nome_paciente || '';
             p.cpf = req.body.cpf || '';
@@ -144,7 +144,7 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
                     res.status(500).json({ "errors": "Erro ao salvar agendamento" });
                 }
                 else {
-                    var agendamento = {
+                    let agendamento = {
                         exame: req.body.nome_exame,
                         start: start_date,
                         end: end_date,
@@ -293,7 +293,7 @@ router.put('/atualizarExame/:id', checkAuth, function (req, res) {
                 res.status(500).json({ "message": "Nenhum agendamento encontrado" });
             }
             else {
-                res.status(200).json({ data: { "message": "Agendamento atualizado com sucesso!" }, success: true });
+                res.status(200).json({ "message": "Agendamento atualizado com sucesso!", success: true });
             }
         }
     );
@@ -739,11 +739,11 @@ router.get('/contagemPorConvenioMes/:clinica_id', checkAuth, function (req, res)
             // Group back and just return the fields you want
             {
                 $group: {
-                    _id: { id: "$agendamentos.convenio_id", month: "$agendamentos.start" },
+                    _id: { month: { $substr: ["$agendamentos.start", 5, 2] } },
                     count: { $sum: 1 }
                 }
             },
-            { $project: { _id: 0, _id: "$_id.id", "mes": { $substr: ["$_id.month", 5, 2] }, count: "$count" } },
+            { $project: { _id: 0, name: "$_id.month", value: "$count" } },
         ],
         function (err, result) {
             if (err) {
@@ -753,27 +753,7 @@ router.get('/contagemPorConvenioMes/:clinica_id', checkAuth, function (req, res)
                 res.status(200).json({ data: [], success: true })
             }
             else {
-                // res.status(200).json({ data: result, success: true })
-                clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
-                    if (err) {
-                        res.status(500).json({ "message": err.message })
-                    }
-                    else {
-                        const resultado = []
-                        for (i = 0; i < result.length; i++) {
-                            for (j = 0; j < clinica.convenios.length; j++) {
-                                if (result[i]._id.toString() == clinica.convenios[j]._id.toString()) {
-                                    const value = Number(clinica.convenios[j].valor) * Number(result[i].count)
-                                    const name = result[i].mes
-                                    const obj = { value, name }
-                                    resultado.push(obj)
-                                }
-                            }
-                        }
-
-                        res.status(200).json({ data: resultado, success: true })
-                    }
-                })
+                res.status(200).json({ data: result, success: true })
             }
         });
 })
