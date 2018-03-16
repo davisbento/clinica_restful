@@ -1,90 +1,85 @@
-{% extends "../layout.html" %}
+{% extends "../layout.html" %} {% block content %}
 
-
-{% block content %}
-
-    <div class='main-content'>
-          <h1>Pesquisa de Clinica</h1>
-          <div class='form-group'>
-              <label>Cidade:</label>
-              <input type='text' placeholder='Cidade' id='nome_cidade' class='form-control' />
-          </div>
-
-           <div class='form-group'>
-              <label>Especialidade:</label>
-              <input type='text' placeholder='Especialidade' id='especialidade' class='form-control' />
-          </div>
-
-           <div class='form-group'>
-             <button type='submit' class='btn btn-primary' onClick='pesquisar()'>Pesquisar</button> 
-           </div>
-                
-         
-
-          <div id='resultados'>         
-
-          </div>
-
+<div class='main-content'>
+  <h1>Pesquisa de Clinica</h1>
+  <form action="/localizarClinica" method="post" id="searchForm">
+    <div class='form-group'>
+      <label>Cidade:</label>
+      <input type='text' placeholder='Cidade' id='nome_cidade' class='form-control' />
     </div>
-  
-  <script>
-    function pesquisar(){
-      $.ajax({
-          url: '/localizarClinica',
-          method: 'get',
-          data: {
-            cidade: $('#nome_cidade').val(),
-            especialidade: $('#especialidade').val() || ''
+
+    <div class='form-group'>
+      <label>Especialidade:</label>
+      <input type='text' placeholder='Especialidade' id='especialidade' class='form-control' />
+    </div>
+
+    <div class='form-group'>
+      <button type='submit' class='btn btn-primary'>Pesquisar</button>
+    </div>
+  </form>
+
+
+  <table class="table table-bordered table-hover table-responsive" id="resultTable" style="display:none">
+    <thead>
+      <tr>
+        <th class="text-center">Clinica</th>
+        <th class="text-center">Endereço </th>
+        <th class="text-center">Cidade </th>
+        <th class="text-center">Telefone </th>
+        <th class="text-center">Visualizar </th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+  $('#searchForm').submit(function (e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/localizarClinica',
+      method: 'post',
+      data: {
+        cidade: $('#nome_cidade').val(),
+        especialidade: $('#especialidade').val() || ''
+      },
+      success: function (data, textStatus) {
+        $('#resultTable').css("display", "block");
+        $('#resultTable').DataTable().destroy();
+        $('#resultTable').DataTable({
+          data: data,
+          columns: [{
+              data: 'nome'
             },
-             success: function(data, textStatus) {
-               $( "#resultados" ).html('');
-               if(data.length > 0) {
-                for(reg in data) {
-                  const nome_clinica = `<td>${data[reg].nome}</td>`
-                  const endereco = `<td>${data[reg].endereco}</td>`
-                  const cidade = `<td>${data[reg].cidade}</td>`
-                  const telefone = `<td>${data[reg].telefone}</td>`
-                  const clinica_id = `
-                      <td>
-                        <a href="/detalhe/${data[reg]._id}">
-                          <i class='fa fa-eye'></i>
-                        </a>
-                      </td>`
-
-                  const table = `
-                    <table class='table table-responsive'>
-                      <thead>
-                        <tr>
-                          <th>Clinica</th>
-                          <th>Endereço</th>
-                          <th>Cidade</th>
-                          <th>Telefone</th>
-                          <th>Visualizar</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                            ${nome_clinica}
-                            ${endereco}
-                            ${cidade}
-                            ${telefone}
-                            ${clinica_id}
-                        </tr>
-                      </tbody>
-                    </table>
-                  `
-
-                  $('#resultados').append(table)
-
-                }
-               }
-               else {
-                 var not_found = '<h3 class="alert alert-danger">Nenhuma clinica encontrada</h3>'
-                 $('#resultados').append(not_found)
-               }
+            {
+              data: 'endereco'
+            },
+            {
+              data: 'cidade'
+            },
+            {
+              data: 'telefone'
+            },
+            {
+              data: '_id',
+              render: function (data, type, row) {
+                return '<a href=\"/detalhe/' + data + '\">Visualizar</a>'
+              }
             }
+          ],
+          language: {
+            sLengthMenu: "_MENU_ clinicas",
+            sInfo: "Mostrando _END_ de _TOTAL_ clinicas(s)",
+            emptyTable: "<p class=\"text-danger text-center\">Nenhuma clinica cadastrada!</p>"
+          },
+          searching: false
         })
-    }
-  </script>
+      }
+    })
+  });
+</script>
 
 {% endblock %}

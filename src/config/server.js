@@ -34,14 +34,13 @@ app.use(morgan('combined'));
 app.use(multiparty());
 
 io.on('connection', socket => {
-    socket.on('AGENDAMENTO_INSERIDO', function(data) {
-        socket.broadcast.emit('AGENDAMENTO_INSERIDO_SUCESSO')
+    socket.on('AGENDAMENTO_ATUALIZADO', function(data) {
+        socket.broadcast.emit('AGENDAMENTO_ATUALIZADO_SUCESSO')
     })
-})
-
+});
 
 server.listen(PORT, function(){
     console.log('BACKEND RUNNING ON PORT', PORT);
-})
+});
 
-module.exports = app
+module.exports = app;

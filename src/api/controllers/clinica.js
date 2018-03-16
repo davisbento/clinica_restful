@@ -11,76 +11,65 @@ const fs = require('fs');
 router.get('/listar/:clinica_id', checkAuth, function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
-            res.status(500).json({ message: err });
-        }
-        else {
-            res.status(200).json({ data: clinica, success: true });
+            res.status(500).json({
+                message: err
+            });
+        } else {
+            res.status(200).json({
+                data: clinica,
+                success: true
+            });
         }
     })
 });
 
 router.put('/atualizarClinica/:clinica_id', function (req, res) {
-    var date = new Date();
-    var time_stamp = date.getTime();
-
-    var url_imagem = time_stamp + '.jpg';
-
-    var path_origem = req.body.imgs[0].preview;
-    var path_destino = '../uploads/' + url_imagem;
-
-    console.log(path_origem)
-
-    fs.rename(path_origem, path_destino, function (err) {
+    clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
-            res.status(500).json({ message: err.message });
-            return;
+            res.status(500).json({
+                "message": "Erro ao localizar a clinica"
+            });
+        } else {
+
+            clinica.nome = req.body.nome;
+            clinica.cidade = req.body.cidade;
+            clinica.endereco = req.body.endereco;
+            clinica.telefone = req.body.telefone;
+
+            if (req.body.especialidades.length > 0) {
+                // limpa o array para receber um novo
+                clinica.especialidades = [];
+                // percorre o array e insere cada um no banco  
+                clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
+            } else {
+                // se o array estiver vazio, zera o array atual
+                clinica.especialidades = [];
+            }
+
+            clinica.save(function (err) {
+                if (err) {
+                    res.status(500).json({
+                        "message": err.message
+                    });
+                } else {
+                    res.status(200).json({
+                        "message": "Clinica alterada com sucesso!",
+                        success: true
+                    });
+                }
+            })
         }
 
-        clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
-            if (err) {
-                res.status(500).json({ "message": "Erro ao localizar a clinica" });
-            }
-            else {
-
-                clinica.nome = req.body.nome;
-                clinica.cidade = req.body.cidade;
-                clinica.endereco = req.body.endereco;
-                clinica.telefone = req.body.telefone;
-                clinica.imgs = [...clinica.imgs, url_imagem]
-
-
-                if (req.body.especialidades.length > 0) {
-                    // limpa o array para receber um novo
-                    clinica.especialidades = [];
-                    // percorre o array e insere cada um no banco  
-                    clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
-                }
-                else {
-                    // se o array estiver vazio, zera o array atual
-                    clinica.especialidades = [];
-                }
-
-                clinica.save(function (err) {
-                    if (err) {
-                        res.status(500).json({ "message": err.message });
-                    }
-                    else {
-                        res.status(200).json({ "message": "Clinica alterada com sucesso!", success: true });
-                    }
-                })
-            }
-
-        })
     })
-
 })
 
 router.post('/cadastrarConvenio/:clinica_id', checkAuth, function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
-            res.status(500).json({ "message": err.message });
-        }
-        else {
+            res.status(500).json({
+                "message": err.message
+            });
+        } else {
             const convenios = {
                 nome: req.body.nome,
                 valor: req.body.valor || 0,
@@ -91,10 +80,14 @@ router.post('/cadastrarConvenio/:clinica_id', checkAuth, function (req, res) {
 
             clinica.save(function (err) {
                 if (err) {
-                    res.status(500).json({ "message": err.message })
-                }
-                else {
-                    res.status(200).json({ "message": "Convenio criado com sucesso!", success: true });
+                    res.status(500).json({
+                        "message": err.message
+                    })
+                } else {
+                    res.status(200).json({
+                        "message": "Convenio criado com sucesso!",
+                        success: true
+                    });
                 }
             })
 
@@ -107,19 +100,26 @@ router.get('/listarConveniosPorMedico/:medico_id', checkAuth, function (req, res
     const id = req.params.medico_id;
     usuarioModel.findById(id, function (err, medico) {
         if (err) {
-            res.status(500).json({ "message": err.message });
-        }
-        else if (!medico) {
-            res.status(200).json({ data: [], success: true })
-        }
-        else {
+            res.status(500).json({
+                "message": err.message
+            });
+        } else if (!medico) {
+            res.status(200).json({
+                data: [],
+                success: true
+            })
+        } else {
             clinicaModel.findById(medico.clinica_id, function (err, clinica) {
                 if (err) {
-                    res.status(500).json({ "message": err.message });
-                }
-                else {
+                    res.status(500).json({
+                        "message": err.message
+                    });
+                } else {
                     const convenios = clinica.convenios.filter(e => e.medico_id == id)
-                    res.json({ data: convenios, success: true })
+                    res.json({
+                        data: convenios,
+                        success: true
+                    })
                 }
             })
         }
@@ -129,19 +129,23 @@ router.get('/listarConveniosPorMedico/:medico_id', checkAuth, function (req, res
 router.get('/listarConveniosClinica/:clinica_id', checkAuth, function (req, res) {
     clinicaModel.findById(req.params.clinica_id, function (err, clinica) {
         if (err) {
-            res.status(500).json({ "message": err.message });
-        }
-        else {
+            res.status(500).json({
+                "message": err.message
+            });
+        } else {
             const convenios = clinica.convenios.map(e => e.nome);
-            res.json({ data: convenios, success: true });
+            res.json({
+                data: convenios,
+                success: true
+            });
         }
     })
 })
 
 router.put('/atualizarConvenio/:convenio_id', checkAuth, function (req, res) {
-    clinicaModel.findOneAndUpdate(
-        { "convenios._id": req.params.convenio_id },
-        {
+    clinicaModel.findOneAndUpdate({
+            "convenios._id": req.params.convenio_id
+        }, {
             "$set": {
                 "convenios.$.nome": req.body.nome.toUpperCase(),
                 "convenios.$.valor": req.body.valor,
@@ -150,10 +154,14 @@ router.put('/atualizarConvenio/:convenio_id', checkAuth, function (req, res) {
         },
         function (err, doc) {
             if (err) {
-                res.status(500).json({ message: err.message })
-            }
-            else {
-                res.status(200).json({ message: "Convênio atualizado com sucesso!", success: true })
+                res.status(500).json({
+                    message: err.message
+                })
+            } else {
+                res.status(200).json({
+                    message: "Convênio atualizado com sucesso!",
+                    success: true
+                })
             }
         }
     );
@@ -175,10 +183,13 @@ router.post('/emailContato', function (req, res) {
 
     emailService.emailContato(email, emailMessage, function (result) {
         if (!result) {
-            res.status(400).json({ message: "Erro ao enviar e-mail" });
-        }
-        else {
-            res.status(200).json({ message: "Email enviado com sucesso. Obrigado pelo contato!" });
+            res.status(400).json({
+                message: "Erro ao enviar e-mail"
+            });
+        } else {
+            res.status(200).json({
+                message: "Email enviado com sucesso. Obrigado pelo contato!"
+            });
         }
     });
 })

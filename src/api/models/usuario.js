@@ -12,7 +12,7 @@ const usuarioSchema = mongoose.Schema({
     cargo: { type: String },
     admin: { type: Boolean, default: false },
     clinica_id: { type: mongoose.Schema.Types.ObjectId },
-    token: String,
+    token: String
 });
 
 usuarioSchema.methods.generateHash = function (password) {

@@ -177,6 +177,7 @@ router.post('/authenticate', function (req, res) {
                 token,
                 _id: user._id,
                 clinica_id: user.clinica_id,
+                admin: user.admin,
                 message: "Usuário autenticado, redirecionando..."
             });
         }
