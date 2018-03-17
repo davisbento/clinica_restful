@@ -301,10 +301,16 @@ router.put('/atualizarExame/:id', function (req, res) {
 
 /*
     @params: ?nome_exame=String
+    @clinica_id: ObjectId
 */
 router.get('/listarExames/:clinica_id', checkAuth, function (req, res) {
+
+    //req.query.nome_exame
+
+    let tipo_exame = ['Consulta', 'Retorno'];
+
     const rules = [
-        { "agendamentos.exame": req.query.nome_exame },
+        { "agendamentos.exame": { $in: tipo_exame } },
         { "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id) }
     ]
 
@@ -350,9 +356,17 @@ router.get('/listarExames/:clinica_id', checkAuth, function (req, res) {
 });
 
 router.get('/listarExamesMedico/:medico_id', checkAuth, function (req, res) {
+
+        //req.query.nome_exame
+
+    let tipo_exame = ['Consulta', 'Retorno'];
+    
     const medico_id = mongoose.Types.ObjectId(req.params.medico_id)
 
-    const rules = [{ "agendamentos.exame": req.query.nome_exame }, { "agendamentos.medico_id": medico_id }]
+    const rules = [
+            { "agendamentos.exame": { $in: tipo_exame } },
+            { "agendamentos.medico_id": medico_id }
+        ];
 
     pacienteModel.aggregate(
         [
