@@ -5,7 +5,7 @@ const app = express();
 const allowCors = require('./cors');
 const queryParser = require('express-query-int');
 const morgan = require('morgan');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const server = require('http').createServer(app);  
 const io = require('socket.io')(server);
 const nunjucks = require('nunjucks');
@@ -22,6 +22,9 @@ nunjucks.configure(path.join(__dirname, '../app/views'), {
 });
 
 app.set('view engine', 'html');
+
+// SET DEFAULT TIME-ZONE AS SAO PAULO
+moment.tz.setDefault("America/Sao_Paulo");
 
 // SET MOMENT AS PT-BR LOCALE
 moment.locale('pt-br');

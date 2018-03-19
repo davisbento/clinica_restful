@@ -1,5 +1,5 @@
 const express = require('express');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const router = express.Router();
 const pacienteModel = require('../models/paciente');
 const usuarioModel = require('../models/usuario');
@@ -197,7 +197,6 @@ router.post('/agendarExame/:clinica_id', checkAuth, function (req, res) {
             });
         }
     })
-
 });
 
 router.delete('/:id', function (req, res) {
