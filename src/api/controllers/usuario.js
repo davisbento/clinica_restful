@@ -36,7 +36,6 @@ function validaUsuarioForm(payload) {
 }
 
 router.get('/list', checkAuth, function (req, res) {
-
     usuarioModel.find({}, function (err, result) {
         if (err) {
             res.status(500).json({ err });
@@ -48,7 +47,6 @@ router.get('/list', checkAuth, function (req, res) {
             res.status(200).json({ data: result, success: true });
         }
     });
-
 });
 
 router.post('/', function (req, res) {
