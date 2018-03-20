@@ -239,7 +239,8 @@ router.delete('/:id', function (req, res) {
             });
         } else {
             res.status(200).json({
-                message: "Usuario removido com sucesso!"
+                message: "Usuario removido com sucesso!",
+                success: true
             });
         }
     });
@@ -300,7 +301,8 @@ router.put('/:id', function (req, res) {
                     });
                 } else {
                     res.status(200).json({
-                        "message": "Paciente alterado com sucesso!"
+                        "message": "Paciente alterado com sucesso!",
+                        success: true
                     });
                 }
             })
@@ -666,7 +668,7 @@ router.post('/:clinica_id', function (req, res) {
     p.rua = req.body.rua || '';
     p.bairro = req.body.bairro || '';
     p.cidade = req.body.cidade || '';
-    p.clinica = req.params.clinica_id;
+    p.clinica_id = req.params.clinica_id;
     p.UF = req.body.UF || '';
 
     p.save(function (err) {
@@ -683,7 +685,6 @@ router.post('/:clinica_id', function (req, res) {
             });
         }
     })
-
 });
 
 router.get('/listarPacienteExame/:agendamento_id', checkAuth, function (req, res) {
