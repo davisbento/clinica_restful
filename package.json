@@ -7,9 +7,9 @@
     "dev": "nodemon -e js,html,css",
     "prod": "pm2 start src/loader.js --name clinica_restful",
     "starte": "node src/loader.js",
-    "startee": "node src/loader.js",
+    "start": "node src/loader.js",
     "build": "rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
-    "start": "yarn build && node dist/src/loader.js"
+    "startww": "yarn build && node dist/src/loader.js"
   },
   "keywords": [],
   "author": "",
