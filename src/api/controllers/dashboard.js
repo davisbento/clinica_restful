@@ -198,37 +198,7 @@ router.get('/contagemPorConvenio/:clinica_id', checkAuth, function (req, res) {
 */
 router.get('/conversaoConsultas/:clinica_id', checkAuth, async (req, res) => {
     try {
-        const result = await pacienteModel.aggregate(
-            [
-                // Match the document containing the array element
-                {
-                    "$match": {
-                        "clinica_id": mongoose.Types.ObjectId(req.params.clinica_id)
-                    }
-                },
-
-                // Unwind to "de-normalize" the array content
-                {
-                    "$unwind": "$agendamentos"
-                },
-
-                // Group back and just return the fields you want
-                {
-                    $group: {
-                        _id: "$agendamentos.status",
-                        count: {
-                            $sum: 1
-                        }
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        _id: "$_id",
-                        count: "$count"
-                    }
-                },
-            ]);
+        const result = await dashboardProc.conversaoConsultas(req.params.clinica_id);
 
         let total = 0;
         let finalizados = result.filter(e => e._id === "Finalizado");
@@ -252,7 +222,7 @@ router.get('/conversaoConsultas/:clinica_id', checkAuth, async (req, res) => {
             },
             success: true
         });
-        
+
     } catch (err) {
         res.status(500).json({
             "message": err.message
@@ -262,38 +232,9 @@ router.get('/conversaoConsultas/:clinica_id', checkAuth, async (req, res) => {
 
 router.get('/contagemPorTipoStatus/:clinica_id', checkAuth, async (req, res) => {
     const clinica_id = req.params.clinica_id;
+
     try {
-        let result;
-        result = await pacienteModel.aggregate([
-            // Match the document containing the array element
-            {
-                "$match": {
-                    "clinica_id": mongoose.Types.ObjectId(clinica_id)
-                }
-            },
-
-            // Unwind to "de-normalize" the array content
-            {
-                "$unwind": "$agendamentos"
-            },
-
-            // Group back and just return the fields you want
-            {
-                $group: {
-                    _id: "$agendamentos.status",
-                    count: {
-                        $sum: 1
-                    }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    name: "$_id",
-                    value: "$count"
-                }
-            },
-        ])
+        const result = await dashboardProc.contagemPorTipoStatus(clinica_id);
 
         res.status(200).json({
             data: result,
@@ -302,7 +243,7 @@ router.get('/contagemPorTipoStatus/:clinica_id', checkAuth, async (req, res) => 
 
     } catch (err) {
         res.status(500).json({
-            "message": err
+            "message": err.message
         });
     }
 });

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const usuarioModel = require('../models/usuario');
 const clinicaModel = require('../models/clinica');
-const emailService = require('../services/emailService');
+// const emailService = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
