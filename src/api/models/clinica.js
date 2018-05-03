@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const convenioSchema = new mongoose.Schema({
     nome: { type: String, uppercase: true, required: true },
     valor: { type: Number },
+    ativo: { type: Boolean, default: true },
     medico_id: { type: mongoose.Schema.Types.ObjectId }
 })
 
