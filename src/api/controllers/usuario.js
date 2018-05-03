@@ -269,8 +269,6 @@ router.put('/changeAtivo/:usuario_id', function (req, res) {
     )
 });
 
-
-
 router.get('/pesquisarUsuario/:clinica_id/:busca', function (req, res) {
     const clinica_id = req.params.clinica_id;
     const busca = req.params.busca.toUpperCase();

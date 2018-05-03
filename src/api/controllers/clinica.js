@@ -167,6 +167,29 @@ router.put('/atualizarConvenio/:convenio_id', checkAuth, function (req, res) {
     );
 })
 
+router.put('/changeAtivo/:convenio_id', function (req, res) {
+    clinicaModel.findOneAndUpdate({
+            "convenios._id": req.params.convenio_id
+        }, {
+            $set: {
+                "convenios.$.ativo": req.body.isAtivo
+            }
+        },
+        function (err, clinica) {
+            if (err) {
+                res.status(500).json({
+                    "message": "Erro: " + err
+                })
+            } else {
+                res.status(200).json({
+                    message: "Convênio alterado com sucesso!",
+                    success: true
+                })
+            }
+        }
+    )
+});
+
 router.post('/emailContato', function (req, res) {
     const nome = req.body.name;
     const email = req.body.email;

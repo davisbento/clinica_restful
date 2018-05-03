@@ -70,7 +70,6 @@ router.post('/signup', function (req, res) {
         })
     }
 
-
     usuarioModel.findOne({ "email": req.body.email }, function (err, result) {
         var errors = {};
         if (err) {
