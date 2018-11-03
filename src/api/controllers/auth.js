@@ -10,178 +10,178 @@ const devURL = 'http://localhost:3000/confirm_account?token=';
 const prodURL = 'http://clinicanaweb.online/confirm_account?token=';
 
 function validaLoginForm(payload) {
-    var errors = {};
-    var isValidForm = true;
+  var errors = {};
+  var isValidForm = true;
 
-    if (Object.keys(payload).length === 0 && payload.constructor === Object) {
-        errors["form"] = "O formulário deve ser preenchido!";
-        isValidForm = false;
-    }
-    else {
+  if (Object.keys(payload).length === 0 && payload.constructor === Object) {
+    errors["form"] = "O formulário deve ser preenchido!";
+    isValidForm = false;
+  }
+  else {
 
-        if (payload.nome === undefined || payload.nome.length < 3 || payload.nome === '') {
-            errors["nome"] = "O campo nome não pode ser vazio ou menos de 3 caracteres"
-            isValidForm = false;
-        }
-
-        if (payload.email === undefined || payload.email.length < 8 || payload.email === '') {
-            errors["email"] = "O campo email não pode ser vazio ou menos de 8 caracteres"
-            isValidForm = false;
-        }
-
-        if (payload.nome_clinica === undefined || payload.nome_clinica === '') {
-            errors["nome_clinica"] = "O nome da clinica pode ser nulo"
-            isValidForm = false;
-        }
-
-        if (payload.password === undefined || payload.password === '') {
-            errors["password"] = "O campo senha não pode ser vazio"
-            isValidForm = false;
-        }
+    if (payload.nome === undefined || payload.nome.length < 3 || payload.nome === '') {
+      errors["nome"] = "O campo nome não pode ser vazio ou menos de 3 caracteres"
+      isValidForm = false;
     }
 
-    return {
-        success: isValidForm,
-        errors
+    if (payload.email === undefined || payload.email.length < 8 || payload.email === '') {
+      errors["email"] = "O campo email não pode ser vazio ou menos de 8 caracteres"
+      isValidForm = false;
     }
+
+    if (payload.nome_clinica === undefined || payload.nome_clinica === '') {
+      errors["nome_clinica"] = "O nome da clinica pode ser nulo"
+      isValidForm = false;
+    }
+
+    if (payload.password === undefined || payload.password === '') {
+      errors["password"] = "O campo senha não pode ser vazio"
+      isValidForm = false;
+    }
+  }
+
+  return {
+    success: isValidForm,
+    errors
+  }
 }
 
 
 router.get('/uploads/:imagem', function (req, res) {
-    var img = req.params.imagem;
+  var img = req.params.imagem;
 
-    fs.readFile('./uploads/' + img, function (err, conteudo) {
-        if (err) {
-            res.status(400).json(err);
-            return;
-        }
+  fs.readFile('./uploads/' + img, function (err, conteudo) {
+    if (err) {
+      res.status(400).json(err);
+      return;
+    }
 
-        res.writeHead(200, { 'content-type': 'image/png' });
-        res.end(conteudo);
-    });
+    res.writeHead(200, { 'content-type': 'image/png' });
+    res.end(conteudo);
+  });
 });
 
 router.post('/signup', function (req, res) {
-    var validationResult = validaLoginForm(req.body);
+  var validationResult = validaLoginForm(req.body);
 
-    if (!validationResult.success) {
-        return res.status(400).json({
-            errors: validationResult.errors
-        })
+  if (!validationResult.success) {
+    return res.status(400).json({
+      errors: validationResult.errors
+    })
+  }
+
+  usuarioModel.findOne({ "email": req.body.email }, function (err, result) {
+    var errors = {};
+    if (err) {
+      message = err;
+      res.status(500).json({ message });
     }
+    else if (result) {
+      errors.identificador = "E-mail já cadastrado no sistema!";
+      message = "Tente um outro endereço de e-mail ou recupere sua senha.";
+      res.status(400).json({ errors, message });
+    }
+    else {
+      // CRIA A CLINICA
+      var clinica = new clinicaModel();
 
-    usuarioModel.findOne({ "email": req.body.email }, function (err, result) {
-        var errors = {};
+      clinica.nome = req.body.nome_clinica;
+      clinica.cidade = req.body.cidade;
+      clinica.endereco = '';
+      clinica.telefone = '';
+      clinica.imgs = [];
+
+      var usuario = new usuarioModel();
+
+      usuario.nome = req.body.nome;
+      usuario.email = req.body.email;
+      usuario.password = usuario.generateHash(req.body.password);
+      usuario.token = usuario.generateHash(Date.now());
+      usuario.cargo = req.body.cargo;
+      usuario.clinica_id = clinica._id;
+      usuario.email_confirm = true;
+      usuario.admin = true;
+
+      // const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
+
+      usuario.save(function (err) {
         if (err) {
-            message = err;
-            res.status(500).json({ message });
-        }
-        else if (result) {
-            errors.identificador = "E-mail já cadastrado no sistema!";
-            message = "Tente um outro endereço de e-mail ou recupere sua senha.";
-            res.status(400).json({ errors, message });
+          res.status(500).json({ message: "Erro ao salvar usuário" + err });
         }
         else {
-            // CRIA A CLINICA
-            var clinica = new clinicaModel();
-
-            clinica.nome = req.body.nome_clinica;
-            clinica.cidade = req.body.cidade;
-            clinica.endereco = '';
-            clinica.telefone = '';
-            clinica.imgs = [];
-
-            var usuario = new usuarioModel();
-
-            usuario.nome = req.body.nome;
-            usuario.email = req.body.email;
-            usuario.password = usuario.generateHash(req.body.password);
-            usuario.token = usuario.generateHash(Date.now());
-            usuario.cargo = req.body.cargo;
-            usuario.clinica_id = clinica._id;
-            usuario.email_confirm = true;
-            usuario.admin = true;
-
-            // const link = process.env.NODE_ENV !== 'production' ? devURL + usuario.token : prodURL + usuario.token
-
-            usuario.save(function (err) {
-                if (err) {
-                    res.status(500).json({ message: "Erro ao salvar usuário" + err });
-                }
-                else {
-                    clinica.save()
-                    res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
-                }
-            });
-
-            // emailService.signupEmail(usuario, link, function (result) {
-            //     if (!result) {
-            //         res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
-            //     }
-            //     else {
-            //         usuario.save(function (err) {
-            //             if (err) {
-            //                 res.status(500).json({ message: "Erro ao salvar usuário" + err });
-            //             }
-            //             else {
-            //                 clinica.save()
-            //                 res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
-            //             }
-            //         });
-            //     }
-            // });
+          clinica.save()
+          res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
         }
-    })
+      });
+
+      // emailService.signupEmail(usuario, link, function (result) {
+      //     if (!result) {
+      //         res.status(400).json({ message: "Erro ao cadastrar usuário, verifique seu email e senha!" });
+      //     }
+      //     else {
+      //         usuario.save(function (err) {
+      //             if (err) {
+      //                 res.status(500).json({ message: "Erro ao salvar usuário" + err });
+      //             }
+      //             else {
+      //                 clinica.save()
+      //                 res.status(200).json({ message: "Usuário criado com sucesso! Confirme seu e-mail antes de logar!" });
+      //             }
+      //         });
+      //     }
+      // });
+    }
+  })
 });
 
 router.post('/authenticate', function (req, res) {
-    const pass = req.body.password;
+  const pass = req.body.password;
 
-    const identificador = req.body.identificador.toLowerCase();
+  const identificador = req.body.identificador.toLowerCase();
 
-    const criteria = (identificador.indexOf('@') === -1) ? { username: identificador } : { email: identificador };
+  const criteria = (identificador.indexOf('@') === -1) ? { username: identificador } : { email: identificador };
 
-    const usuario = new usuarioModel();
+  const usuario = new usuarioModel();
 
-    usuarioModel.findOne({ $and: [criteria, { "ativo": true }] }, function (err, user) {
-        let errors = {};
-        if (err) {
-            res.status(500).json({ err });
-        }
-        else if (!user) {
-            errors.identificador = "E-mail/usuário não encontrado no sistema";
-            message = "Valide o formulário";
-            res.status(400).json({ errors, message });
-        }
-        else if (!usuario.comparePassword(pass, user.password)) {
-            errors.password = "A senha não confere";
-            message = "Valide o formulário";
-            res.status(400).json({ errors, message });
-        }
-        else if (!user.email_confirm) {
-            errors.identificador = "E-mail não confirmado, confirme seu e-mail antes de logar";
-            message = "Valide o formulário";
-            res.status(400).json({ errors, message });
-        }
-        else {
-            const payload = {
-                sub: user._id,
-                //admin: user.admin --> boolean
-            };
+  usuarioModel.findOne({ $and: [criteria, { "ativo": true }] }, function (err, user) {
+    let errors = {};
+    if (err) {
+      res.status(500).json({ err });
+    }
+    else if (!user) {
+      errors.identificador = "E-mail/usuário não encontrado no sistema";
+      message = "Valide o formulário";
+      res.status(400).json({ errors, message });
+    }
+    else if (!usuario.comparePassword(pass, user.password)) {
+      errors.password = "A senha não confere";
+      message = "Valide o formulário";
+      res.status(400).json({ errors, message });
+    }
+    else if (!user.email_confirm) {
+      errors.identificador = "E-mail não confirmado, confirme seu e-mail antes de logar";
+      message = "Valide o formulário";
+      res.status(400).json({ errors, message });
+    }
+    else {
+      const payload = {
+        sub: user._id,
+        //admin: user.admin --> boolean
+      };
 
-            // create a token string
-            const token = jwt.sign(payload, process.env.SECRET_KEY);
+      // create a token string
+      const token = jwt.sign(payload, process.env.SECRET_KEY);
 
-            res.status(200).json({
-                token,
-                _id: user._id,
-                clinica_id: user.clinica_id,
-                admin: user.admin,
-                message: "Usuário autenticado, redirecionando...",
-                success: "true"
-            });
-        }
-    });
+      res.status(200).json({
+        token,
+        _id: user._id,
+        clinica_id: user.clinica_id,
+        admin: user.admin,
+        message: "Usuário autenticado, redirecionando...",
+        success: "true"
+      });
+    }
+  });
 });
 
 module.exports = router

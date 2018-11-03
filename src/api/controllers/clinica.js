@@ -39,8 +39,8 @@ router.put('/atualizarClinica/:clinica_id', function (req, res) {
             if (req.body.especialidades.length > 0) {
                 // limpa o array para receber um novo
                 clinica.especialidades = [];
-                // percorre o array e insere cada um no banco  
-                clinica.especialidades = clinica.especialidades.concat(req.body.especialidades);
+                // percorre o array e insere cada um no banco
+                clinica.especialidades = [...req.body.especialidades];
             } else {
                 // se o array estiver vazio, zera o array atual
                 clinica.especialidades = [];

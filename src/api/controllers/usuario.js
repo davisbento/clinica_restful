@@ -87,8 +87,9 @@ router.post('/', function (req, res) {
     })
 });
 
-router.get('/list/:id', checkAuth, function (req, res) {
-    usuarioModel.findById(req.params.id, {
+router.get('/profile', checkAuth, function (req, res) {
+    const user = req.usuario;
+    usuarioModel.findById(user.id, {
             nome: 1,
             email: 1,
             admin: 1,
@@ -98,6 +99,26 @@ router.get('/list/:id', checkAuth, function (req, res) {
             cargo: 1,
             _id: 0
         },
+        function (err, result) {
+            if (err) {
+                res.status(500).json({
+                    err
+                });
+            } else if (!result) {
+                res.status(400).json({
+                    message: "Nenhum usuário encontrado"
+                });
+            } else {
+                res.status(200).json({
+                    data: result,
+                    success: true
+                });
+            }
+        });
+});
+
+router.get('/list/:id', checkAuth, function (req, res) {
+    usuarioModel.findById(req.params.id, {},
         function (err, result) {
             if (err) {
                 res.status(500).json({
@@ -172,7 +193,7 @@ router.get('/listarMedicos/:clinica_id', checkAuth, function (req, res) {
         "clinica_id": req.params.clinica_id
     }, {
         "cargo": "Medico"
-    }]
+    }];
 
     usuarioModel.find({
             $and: criteria
@@ -290,7 +311,7 @@ router.get('/pesquisarUsuario/:clinica_id/:busca', function (req, res) {
                 }
             }
 
-            // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'  
+            // RETORNA O ARRAY FILTRADO APENAS COM OS PACIENTES COM NOME LIKE 'BUSCA'
             const usuarioFiltrado = usuarios.filter(filtroLike)
 
             res.status(200).json({
